@@ -42,6 +42,9 @@ import NewCampaignWizard, { type NewCampaignResult } from "@/components/NewCampa
 import DaggerheartLevelUpWizard from "@/components/DaggerheartLevelUpWizard";
 import { TRAIT_LABELS, TRAIT_ORDER } from "@/lib/characterCreation/daggerheart";
 import {
+  availableBeastformsForCharacter,
+  canUseBeastform,
+  daggerheartTierForLevel,
   effectiveCharacterEvasion,
   effectiveCharacterTraits,
 } from "@/lib/daggerheartCharacter";
@@ -816,7 +819,7 @@ export default function OracleApp() {
   const [state, setState] = useState<GameState>(initialState);
   const [screen, setScreen] = useState<AppScreen>("home");
   const [view, setView] = useState<View>("session");
-  const [characterSheetMode, setCharacterSheetMode] = useState<"character" | "companion">("character");
+  const [characterSheetMode, setCharacterSheetMode] = useState<"character" | "companion" | "beastforms">("character");
   const [memoryMode, setMemoryMode] = useState<"timeline" | "details">("timeline");
   const [input, setInput] = useState("");
   const [ready, setReady] = useState(false);
@@ -1047,6 +1050,11 @@ export default function OracleApp() {
   const effectiveEvasion = useMemo(() => effectiveCharacterEvasion(state.character), [state.character]);
   const animalCompanion = state.character.daggerheart?.animalCompanion;
   const showingCompanionSheet = Boolean(animalCompanion && characterSheetMode === "companion");
+  const hasBeastform = state.campaign.system === "Daggerheart" && canUseBeastform(state.character);
+  const showingBeastformSheet = hasBeastform && characterSheetMode === "beastforms";
+  const showingCharacterSheet = !showingCompanionSheet && !showingBeastformSheet;
+  const beastformTier = daggerheartTierForLevel(state.character.level);
+  const availableBeastforms = hasBeastform ? availableBeastformsForCharacter(state.character, daggerheartCompendium.entries) : [];
   const deathBlocksActions = Boolean(
     state.character.conditions.includes("Inconsciente")
     || ["choice", "avoiding", "risking", "risk-recovery", "dead"].includes(state.character.death?.status || ""),
@@ -2955,26 +2963,56 @@ export default function OracleApp() {
 
           {view === "character" && (
             <section className="widePanel panel">
-              {animalCompanion ? (
-                <div className="characterSheetTabs" role="tablist" aria-label="Ficha ativa">
+              {animalCompanion || hasBeastform ? (
+                <div className="characterSheetTabs" role="tablist" aria-label="Ficha ativa" onKeyDown={(event) => {
+                  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+                  const tabs = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('button[role="tab"]')];
+                  const index = tabs.indexOf(document.activeElement as HTMLButtonElement);
+                  if (index < 0) return;
+                  event.preventDefault();
+                  const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
+                    : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+                  tabs[nextIndex]?.click();
+                  tabs[nextIndex]?.focus();
+                }}>
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={!showingCompanionSheet}
-                    className={!showingCompanionSheet ? "active" : ""}
+                    id="character-sheet-tab"
+                    aria-controls="character-sheet-panel"
+                    aria-selected={showingCharacterSheet}
+                    tabIndex={showingCharacterSheet ? 0 : -1}
+                    className={showingCharacterSheet ? "active" : ""}
                     onClick={() => setCharacterSheetMode("character")}
                   >Personagem</button>
+                  {animalCompanion && (
                   <button
                     type="button"
                     role="tab"
+                    id="companion-sheet-tab"
+                    aria-controls="companion-sheet-panel"
                     aria-selected={showingCompanionSheet}
+                    tabIndex={showingCompanionSheet ? 0 : -1}
                     className={showingCompanionSheet ? "active" : ""}
                     onClick={() => setCharacterSheetMode("companion")}
                   >Companheiro</button>
+                  )}
+                  {hasBeastform && (
+                    <button
+                      type="button"
+                      role="tab"
+                      id="beastform-sheet-tab"
+                      aria-controls="beastform-sheet-panel"
+                      aria-selected={showingBeastformSheet}
+                      tabIndex={showingBeastformSheet ? 0 : -1}
+                      className={showingBeastformSheet ? "active" : ""}
+                      onClick={() => setCharacterSheetMode("beastforms")}
+                    >Formas de Fera</button>
+                  )}
                 </div>
               ) : <div className="eyebrow">PERSONAGEM</div>}
               {showingCompanionSheet && animalCompanion && (
-                <div className="companionSheetView">
+                <div className="companionSheetView" id="companion-sheet-panel" role="tabpanel" aria-labelledby="companion-sheet-tab">
                   <div className="profileTop companionProfileTop">
                     {animalCompanion.image ? (
                       <img
@@ -3037,8 +3075,35 @@ export default function OracleApp() {
                   )}
                 </div>
               )}
-              {!showingCompanionSheet && (
-                <>
+              {showingBeastformSheet && (
+                <div className="beastformSheetView" id="beastform-sheet-panel" role="tabpanel" aria-labelledby="beastform-sheet-tab">
+                  <div className="beastformSheetHeader">
+                    <div><small>FORMA DE FERA</small><h1>Formas disponíveis</h1><p>Nível {state.character.level} · Patamar {beastformTier}</p></div>
+                    <span>{availableBeastforms.length} formas</span>
+                  </div>
+                  <p className="beastformSheetHint">Você pode assumir formas do seu patamar ou de patamares inferiores. Abra uma forma para consultar seus animais, atributos, ataques e habilidades.</p>
+                  {[1, 2, 3, 4].filter((tier) => tier <= beastformTier).map((tier) => {
+                    const forms = availableBeastforms.filter((entry) => entry.beastformTier === tier);
+                    if (!forms.length) return null;
+                    return <section className="beastformTierGroup" key={tier} aria-label={"Formas de Fera do patamar " + tier}>
+                      <h3 className="subhead">Patamar {tier} <span>{forms.length} formas</span></h3>
+                      <div className="cardGrid">{forms.map((entry) => (
+                        <SheetExpandableCard
+                          key={entry.id}
+                          icon="♧"
+                          title={entry.name}
+                          subtitle={entry.description.match(/^Exemplos:\s*(.+)$/m)?.[1] || "Forma de Fera"}
+                          entry={entry}
+                          description={entry.description}
+                        />
+                      ))}</div>
+                    </section>;
+                  })}
+                  {!availableBeastforms.length && <p className="beastformSheetHint">Nenhuma forma disponível para este patamar.</p>}
+                </div>
+              )}
+              {showingCharacterSheet && (
+                <div id="character-sheet-panel" role={animalCompanion || hasBeastform ? "tabpanel" : undefined} aria-labelledby={animalCompanion || hasBeastform ? "character-sheet-tab" : undefined}>
               <div className="profileTop">
                 {state.character.daggerheart?.image ? (
                   <img
@@ -3253,7 +3318,7 @@ export default function OracleApp() {
                   );
                 })}
               </div>
-                </>
+                </div>
               )}
             </section>
           )}

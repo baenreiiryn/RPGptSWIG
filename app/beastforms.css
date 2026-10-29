@@ -1,0 +1,12 @@
+.characterSheetTabs{max-width:100%;flex-wrap:wrap}
+.beastformSheetView{padding-top:20px}
+.beastformSheetHeader{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.beastformSheetHeader small{display:block;color:var(--violet);font-size:9px;letter-spacing:.15em;font-weight:800}
+.beastformSheetHeader h1{font:500 30px/1.2 Georgia,serif;margin:8px 0}
+.beastformSheetHeader p{color:var(--muted);font-size:12px;margin:0}
+.beastformSheetHeader>span{flex-shrink:0;border:1px solid #48334f;border-radius:999px;background:#21142c;color:#d9c5e8;padding:7px 11px;font-size:10px}
+.beastformSheetHint{max-width:760px;color:#ad9fba;font-size:12px;line-height:1.7;margin:17px 0 24px}
+.beastformTierGroup{margin:24px 0}
+.beastformTierGroup>.subhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.beastformTierGroup>.subhead>span{color:var(--muted);font:400 10px Arial,sans-serif;letter-spacing:normal;text-transform:none}
+@media(max-width:620px){.beastformSheetHeader{align-items:flex-start;gap:10px}.beastformSheetHeader h1{font-size:24px}.beastformSheetHeader>span{font-size:9px;padding:6px 9px}.beastformSheetHint{font-size:11px}.beastformTierGroup{margin:20px 0}}

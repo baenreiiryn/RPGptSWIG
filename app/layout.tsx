@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./equipment.css";
+import "./beastforms.css";
 
 export const metadata: Metadata = {
   title: "OracleRPG",

@@ -5,6 +5,7 @@ import type {
   DaggerheartTier,
   InventoryItem,
 } from "@/lib/game";
+import type { CompendiumEntry } from "@/lib/compendium/daggerheart";
 
 export type DaggerheartClassStats = {
   hitPoints: number;
@@ -57,6 +58,26 @@ export function daggerheartTierForLevel(level: number): DaggerheartTier {
   if (safeLevel >= 5) return 3;
   if (safeLevel >= 2) return 2;
   return 1;
+}
+
+export function canUseBeastform(character: Pick<CharacterState, "daggerheart">) {
+  const data = character.daggerheart;
+  if (!data) return false;
+  const normalize = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, "-");
+  const druid = [data.class.id, data.class.name].map(normalize).some((value) =>
+    value === "druid" || value === "druida" || value.endsWith("-class-druid"));
+  return druid || (data.classFeatures || []).some((feature) =>
+    [feature.id, feature.name].map(normalize).some((value) =>
+      value === "beastform" || value === "forma-de-fera" || value.endsWith("-classfeature-beastform")));
+}
+
+export function availableBeastformsForCharacter(character: Pick<CharacterState, "level" | "daggerheart">, entries: CompendiumEntry[]) {
+  if (!canUseBeastform(character)) return [];
+  const tier = daggerheartTierForLevel(character.level);
+  return entries.filter((entry) => entry.type === "beastform" && entry.category === "beastforms"
+    && Number.isInteger(entry.beastformTier) && entry.beastformTier! >= 1 && entry.beastformTier! <= tier)
+    .toSorted((a, b) => a.beastformTier! - b.beastformTier! || a.name.localeCompare(b.name, "pt-BR"));
 }
 
 export function subclassFeatureTiersForLevel(level: number) {
