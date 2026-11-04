@@ -2731,10 +2731,12 @@ export default function OracleApp() {
                   <div><small>CENA ATUAL</small><h1>{state.campaign.scene}</h1></div>
                   <span className="livePill">● AO VIVO</span>
                 </div>
-                <div className={`sceneArt ${currentSceneVisual ? "hasSceneImage" : ""}`}>
+                <div className={`chatScene ${currentSceneVisual ? "hasSceneImage" : ""}`}>
                   {currentSceneVisual ? (
                     <>
                       <img
+                        key={currentSceneVisual.imageUrl}
+                        className="chatSceneBackground"
                         src={currentSceneVisual.imageUrl}
                         alt={currentSceneVisual.caption || `Referência visual para ${state.campaign.scene}`}
                         referrerPolicy="no-referrer"
@@ -2747,21 +2749,16 @@ export default function OracleApp() {
                           }
                         }}
                       />
-                      <div className="sceneImageShade" aria-hidden="true" />
                       <div className="sceneImageMeta">
-                        <span>REFERÊNCIA VISUAL · WEB</span>
+                        <span title={currentSceneVisual.caption}>REFERÊNCIA VISUAL · WEB{currentSceneVisual.caption ? ` · ${currentSceneVisual.caption}` : ""}</span>
                         <a href={currentSceneVisual.sourceUrl} target="_blank" rel="noreferrer noopener">
                           Fonte ↗
                         </a>
                       </div>
-                      {currentSceneVisual.caption && <p className="sceneImageCaption">{currentSceneVisual.caption}</p>}
                     </>
                   ) : (
-                    <>
-                      <div className="sceneMoon" />
-                      <div className="sceneDoor"><span>◈</span></div>
-                      <div className="sceneFog" />
-                      <p>{sceneImageBusy ? "BUSCANDO REFERÊNCIA DA CENA…" : sceneImageError ? "REFERÊNCIA VISUAL INDISPONÍVEL" : "AGUARDANDO REFERÊNCIA DA CENA"}</p>
+                    <div className="sceneImageStatus" role="status">
+                      <p>{sceneImageBusy ? "Buscando referência da cena…" : sceneImageError ? "Referência visual indisponível" : "Aguardando referência da cena"}</p>
                       {sceneImageErrorInfo && !sceneImageBusy && (
                         <div className="sceneImageErrorDetail" data-category={sceneImageErrorInfo.category} title={sceneImageErrorInfo.detail}>
                           <strong>{sceneImageErrorInfo.title}</strong>
@@ -2781,9 +2778,8 @@ export default function OracleApp() {
                           Tentar novamente
                         </button>
                       )}
-                    </>
+                    </div>
                   )}
-                </div>
                 <div className="messages">
                   {state.messages.map((message) => (
                     <article className={`message ${message.role}`} key={message.id}>
@@ -2810,6 +2806,7 @@ export default function OracleApp() {
                       Tentar iniciar a primeira cena novamente
                     </button>
                   )}
+                </div>
                 </div>
                 {state.gmRecovery && !state.pendingRoll && !gmBusy && (
                   <button type="button" className="openingRetryButton" onClick={() => void retryGmNarration()} disabled={Boolean(activeDiceRoll)}>
