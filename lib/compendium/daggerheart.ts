@@ -1,5 +1,6 @@
 import raw from "./daggerheart.generated.json";
 import type { EquipmentRarity } from "@/lib/equipmentRarity";
+import type { SessionRestRule } from "@/lib/sessionRestRules";
 
 export type CompendiumMechanics = {
   costs: Array<{ resource: string; amount: number | null; label: string }>;
@@ -39,6 +40,7 @@ export type CompendiumEntry = {
   artSource?: string;
   artLicense?: string;
   motivesAndTactics?: string;
+  sessionRest?: SessionRestRule;
 };
 
 export type SubclassFeatureTier = NonNullable<CompendiumEntry["tier"]>;

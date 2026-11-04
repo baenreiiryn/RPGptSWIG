@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { applySessionRestRule } from "../lib/sessionRestRules.ts";
 import { FOUNDRYBORNE_SOURCE_URL, normalizeSourceArtName } from "./sync-foundryborne-art.mjs";
 
 const root = process.cwd();
@@ -1266,7 +1267,7 @@ const payload = {
     voidUnofficial: voidContent.source,
   },
   categories,
-  entries,
+  entries: entries.map(applySessionRestRule),
 };
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });

@@ -113,6 +113,37 @@ export const oracleTools: OracleTool[] = [
     }
   },
   {
+    name: "character_long_rest",
+    description: "Registra o início, conclusão ou interrupção real de um descanso longo em Daggerheart. start elimina recursos que antes expiravam no fim da sessão. finish renova usos por sessão e devolve efeitos de início de ciclo. interrupt não renova usos. Não use para descanso curto ou simples passagem de tempo. Reutilize o restId retornado para concluir/interromper o mesmo descanso.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        phase: { type: "string", enum: ["start", "finish", "interrupt"] },
+        restId: { type: "string", description: "Identificador do descanso iniciado, obrigatório em finish e interrupt." },
+        reason: { type: "string", minLength: 1 },
+      },
+      required: ["phase", "reason"], additionalProperties: false,
+    },
+  },
+  {
+    name: "character_ability_use",
+    description: "Consome um uso de habilidade ou item do personagem cujo limite era por sessão e agora renova ao terminar descanso longo. Forneça id ou sourceId de sessionAbilityUses. Recusa habilidades não possuídas e usos esgotados. Não consome custos de Esperança/Fadiga nem resolve os demais efeitos. Inspiração também pode ser ativada diretamente pelo tracker, sem duplicar a concessão.",
+    inputSchema: {
+      type: "object",
+      properties: { abilityId: { type: "string", minLength: 1 }, reason: { type: "string", minLength: 1 } },
+      required: ["abilityId", "reason"], additionalProperties: false,
+    },
+  },
+  {
+    name: "character_ability_refresh",
+    description: "Aplica a exceção de Revigorar para recuperar UM uso gasto do personagem. Exige que o personagem possua Revigorar e uma nova rolagem registrada em rollHistory com pelo menos um d6 de resultado 6. A mesma rolagem não pode recarregar várias habilidades. Aplique o custo de Esperança e solicite a rolagem conforme a carta antes desta chamada.",
+    inputSchema: {
+      type: "object", properties: {
+        abilityId: { type: "string", minLength: 1 }, rollId: { type: "string", minLength: 1 }, reason: { type: "string", minLength: 1 },
+      }, required: ["abilityId", "rollId", "reason"], additionalProperties: false,
+    },
+  },
+  {
     name: "character_transformation_set",
     description: "Ativa ou encerra uma transformação temporária do personagem sem sobrescrever os atributos-base. Use especialmente para Forma de Fera do Druida; ao encerrar, a ficha volta automaticamente aos valores normais.",
     inputSchema: {

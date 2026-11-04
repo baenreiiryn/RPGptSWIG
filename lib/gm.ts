@@ -25,6 +25,7 @@ import { oracleTools } from "@/lib/tools";
 import compendium from "./compendium/daggerheart.generated.json" with { type: "json" };
 import type { CompendiumEntry } from "@/lib/compendium/daggerheart";
 import { triggerCampaignMilestoneLevelUp } from "@/lib/daggerheartAdvancement";
+import { changeLongRest, refreshRestAbility, restAbilityAvailability, restCycleFor, useRestAbility } from "@/lib/longRest";
 import {
   attachCraftPendingRoll,
   awardCraftXp,
@@ -95,7 +96,11 @@ export function gmInstructions(system: string) {
     "Para eventos relativos ao momento atual, prefira startsInMinutes e durationMinutes em vez de calcular datas manualmente.",
     "Não invente valores mecânicos que já estejam no contexto.",
     "CARACTERÍSTICAS DO PERSONAGEM: characterAbilities contém as regras completas das habilidades que este personagem possui. Interprete a intenção e a fala do jogador à luz dessas regras, sem exigir o nome exato da habilidade. abilityIntentHints são apenas candidatos: confirme o contexto, a disponibilidade, os limites e os trackers antes de aplicar qualquer efeito.",
-    "INSPIRAÇÃO DO BARDO (Rally): falar para inspirar, encorajar os companheiros ou fazer um discurso pode declarar o uso de Inspiração. Se o personagem possui essa característica, use a regra dela e registre a ativação do Dado de Inspiração com character_tracker_set. Não substitua automaticamente a característica por um teste social genérico nem exija um teste para ativá-la quando a regra não pede. Não conceda a habilidade a quem não a possui nem ignore o limite por sessão. Inspirar o grupo e gastar um dado já concedido são ações diferentes.",
+    "INSPIRAÇÃO DO BARDO (Rally): falar para inspirar, encorajar os companheiros ou fazer um discurso pode declarar o uso de Inspiração. Se o personagem possui essa característica, use a regra dela e registre a ativação do Dado de Inspiração com character_tracker_set. Não substitua automaticamente a característica por um teste social genérico nem exija um teste para ativá-la quando a regra não pede. Não conceda a habilidade a quem não a possui nem ignore o limite por descanso longo. Inspirar o grupo e gastar um dado já concedido são ações diferentes.",
+    "REGRA DO ORACLERPG — CICLO DE DESCANSO LONGO: todas as referências mecânicas a sessão foram adaptadas. Usos antes limitados por sessão são renovados somente AO TERMINAR um descanso longo. Recursos/efeitos antes perdidos ao fim da sessão são perdidos AO INICIAR um descanso longo. Benefícios antes recebidos no início da sessão ocorrem AO TERMINAR o descanso longo. Fechar/reabrir o app, mudar de chat/cena, avançar o calendário ou fazer descanso curto não inicia nem renova esse ciclo.",
+    "DESCANSO LONGO: quando o descanso realmente começar na ficção, chame character_long_rest com phase=start. Só após o descanso ser concluído, avance o relógio pelo tempo narrado e chame phase=finish com o restId retornado. Se for interrompido, use phase=interrupt: os recursos expirados não voltam e os usos gastos não são renovados. Não confunda a intenção de descansar com descanso concluído. A ferramenta trata APENAS o ciclo adaptado; aplique separadamente as escolhas normais de repouso, cura e reparos conforme as regras.",
+    "USOS LIMITADOS: sessionAbilityUses informa limite, usados e restantes. Ao ativar uma dessas habilidades ou itens, registre com character_ability_use antes de conceder efeitos; a ferramenta recusa usos esgotados. A ativação de Inspiração por character_tracker_set também registra seu uso automaticamente; não conte a concessão duas vezes. Recursos já concedidos podem ser gastos sem novo uso da habilidade. Revigorar pode recuperar um uso por character_ability_refresh somente após cumprir a condição e a rolagem da carta.",
+    "EFEITOS DO CICLO: character_long_rest devolve refreshRequired para benefícios que exigem a regra de início do ciclo, como Dados de Oração, Fases Lunares e Liberar o Caos. Resolva cada um conforme sua descrição adaptada. Dados exigidos do jogador devem passar por request_player_roll; não invente resultados. Não repita os efeitos listados em automaticallyApplied. Ao iniciar o descanso, aplique também a expiração aos aliados/NPCs que receberam recursos como Inspiração e considere os efeitos devolvidos em expiredAbilities e groupEffects.",
     "PONTOS DE VIDA EM DAGGERHEART: character.hp representa espaços de PV MARCADOS, exatamente como Fadiga marcada. 0 PV marcados significa personagem intacto; maxHp PV marcados dispara o movimento de morte. Em character_adjust_resource, amount positivo em hp MARCA dano e amount negativo LIMPA dano. Nunca some PV para representar cura.",
     "TRACKERS: se uma característica, subclasse ou carta possuir contador/dado persistente, use character_tracker_set imediatamente quando a ação ou regra gastar, ganhar, ativar ou alterar esse recurso. O tracker do OracleRPG é a fonte da verdade; não deixe a alteração apenas na narração.",
     "AVANÇO EM DAGGERHEART: níveis são concedidos somente por milestone narrativo, nunca por XP. Quando decidir que o grupo alcançou um milestone que concede nível, use campaign_milestone_level_up uma única vez; a ferramenta cria o level-up pendente e a interface coleta os avanços do jogador antes de alterar o nível.",
@@ -206,6 +211,8 @@ export function buildTurnInput(state: GameState, playerText: string) {
         campaign: state.campaign,
         character: state.character,
         characterAbilities,
+        restCycle: state.character.daggerheart ? restCycleFor(state) : undefined,
+        sessionAbilityUses: restAbilityAvailability(state),
         abilityIntentHints,
         inventory: state.inventory,
         crafting: ensureCraftingState(state.crafting),
@@ -534,6 +541,18 @@ export function executeGmTool(
     return { state: next, result: { ok: true, character: next.character } };
   }
 
+  if (name === "character_long_rest") {
+    return changeLongRest(state, String(args.phase || ""), typeof args.restId === "string" ? args.restId : undefined);
+  }
+
+  if (name === "character_ability_use") {
+    return useRestAbility(state, String(args.abilityId || ""));
+  }
+
+  if (name === "character_ability_refresh") {
+    return refreshRestAbility(state, String(args.abilityId || ""), String(args.rollId || ""));
+  }
+
   if (name === "character_tracker_set") {
     const trackerId = String(args.trackerId || "").trim();
     const value = Number(args.value);
@@ -548,6 +567,7 @@ export function executeGmTool(
       { type: "tracker", trackerId, value, mode, ...(dieIndex !== undefined ? { dieIndex } : {}) },
       "gm-ai",
     );
+    if (next === state) return { state, result: { ok: false, error: "O uso desta habilidade não está disponível até terminar um descanso longo." } };
     return {
       state: next,
       result: { ok: true, tracker: next.character.daggerheart?.trackers?.find((entry) => entry.id === trackerId) },

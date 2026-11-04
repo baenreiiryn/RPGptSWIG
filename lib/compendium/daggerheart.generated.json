@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-25T22:43:00.169Z",
+  "generatedAt": "2026-11-04T15:37:30.740Z",
   "sources": {
     "translation": "https://github.com/etiagoabreu/daggerheart-translation-pt-BR",
     "art": "https://github.com/mordachai/art-for-daggerheart",
@@ -918,7 +918,7 @@
       "category": "ancestries",
       "source": "core",
       "parent": "Faerie",
-      "description": "uma vez por sessão, após você ou um aliado voluntário próximo fazer um teste, você pode gastar 3 Pontos de Esperança para rolar novamente os Dados de Dualidade.",
+      "description": "uma vez por descanso longo, após você ou um aliado voluntário próximo fazer um teste, você pode gastar 3 Pontos de Esperança para rolar novamente os Dados de Dualidade.",
       "mechanics": {
         "costs": [
           {
@@ -934,13 +934,17 @@
           "Próximo"
         ],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
-      "art": "/compendium/daggerheart/ancestry-features/testar-a-sorte.webp"
+      "art": "/compendium/daggerheart/ancestry-features/testar-a-sorte.webp",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-ancestryFeature-wings",
@@ -1782,7 +1786,7 @@
       "category": "ancestries",
       "source": "core",
       "parent": "Halfling",
-      "description": "no início de cada sessão, todos os membros de seu grupo recebem 1 Ponto de Esperança.",
+      "description": "Ao terminar um descanso longo, todos os membros de seu grupo recebem 1 Ponto de Esperança.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -1790,13 +1794,16 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "No início de cada sessão"
+          "Ao terminar um descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
-      "art": "/compendium/daggerheart/ancestry-features/talisma-da-sorte.webp"
+      "art": "/compendium/daggerheart/ancestry-features/talisma-da-sorte.webp",
+      "sessionRest": {
+        "initializesAt": "longRestEnd"
+      }
     },
     {
       "id": "core-ancestryFeature-internal-compass",
@@ -2437,7 +2444,7 @@
       "category": "communities",
       "source": "core",
       "parent": "Seaborne",
-      "description": "você pode sentir o fluxo da vida. Ao rolar com Medo, coloque 1 marcador na sua carta de comunidade. Você pode acumular um número de marcadores igual ao seu nível. Antes de fazer um teste, gaste um número qualquer desses marcadores para receber um bônus de +1 a cada marcador gasto. No fim de cada sessão, marcadores não utilizados são perdidos.",
+      "description": "você pode sentir o fluxo da vida. Ao rolar com Medo, coloque 1 marcador na sua carta de comunidade. Você pode acumular um número de marcadores igual ao seu nível. Antes de fazer um teste, gaste um número qualquer desses marcadores para receber um bônus de +1 a cada marcador gasto. Ao iniciar um descanso longo, marcadores não utilizados são perdidos.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -2449,7 +2456,10 @@
         "hope": false,
         "fear": true
       },
-      "art": "/compendium/daggerheart/community-features/conhecer-a-mare.webp"
+      "art": "/compendium/daggerheart/community-features/conhecer-a-mare.webp",
+      "sessionRest": {
+        "expiresAt": "longRestStart"
+      }
     },
     {
       "id": "core-communityFeature-nomadic-pack",
@@ -2460,7 +2470,7 @@
       "category": "communities",
       "source": "core",
       "parent": "Wanderborne",
-      "description": "adicione uma mochila de nômade ao seu inventário. Uma vez por sessão, você pode gastar 1 Ponto de Esperança para tirar um item mundano e útil para a situação de dentro dela. Colabore com o mestre ao definir este item.",
+      "description": "adicione uma mochila de nômade ao seu inventário. Uma vez por descanso longo, você pode gastar 1 Ponto de Esperança para tirar um item mundano e útil para a situação de dentro dela. Colabore com o mestre ao definir este item.",
       "mechanics": {
         "costs": [
           {
@@ -2474,13 +2484,17 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
-      "art": "/compendium/daggerheart/community-features/mochila-de-nomade.webp"
+      "art": "/compendium/daggerheart/community-features/mochila-de-nomade.webp",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-communityFeature-dedicated",
@@ -3024,7 +3038,7 @@
       "category": "communities",
       "source": "expansion",
       "parent": "Reborne",
-      "description": "Uma vez por sessão, você pode gastar 1 Ponto de Esperança para usar as habilidades de comunidade de um aliado. Quando fizer isso, ganhe 1 Ponto de Esperança.",
+      "description": "Uma vez por descanso longo, você pode gastar 1 Ponto de Esperança para usar as habilidades de comunidade de um aliado. Quando fizer isso, ganhe 1 Ponto de Esperança.",
       "mechanics": {
         "costs": [
           {
@@ -3038,13 +3052,17 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
-      "art": "/compendium/daggerheart/community-features/familia-adotada.webp"
+      "art": "/compendium/daggerheart/community-features/familia-adotada.webp",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "expansion-communityFeature-brave-face",
@@ -3055,7 +3073,7 @@
       "category": "communities",
       "source": "expansion",
       "parent": "Warborne",
-      "description": "Uma vez por sessão, quando um ataque fizer com que você marque 1 Ponto de Fadiga, em vez disso você pode gastar 1 Ponto de Esperança.",
+      "description": "Uma vez por descanso longo, quando um ataque fizer com que você marque 1 Ponto de Fadiga, em vez disso você pode gastar 1 Ponto de Esperança.",
       "mechanics": {
         "costs": [
           {
@@ -3074,13 +3092,17 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
-      "art": "/compendium/daggerheart/community-features/semblante-corajoso.webp"
+      "art": "/compendium/daggerheart/community-features/semblante-corajoso.webp",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "expansion-communityFeature-close-knit",
@@ -3147,7 +3169,7 @@
       "category": "communities",
       "source": "expansion",
       "parent": "Freeborne",
-      "description": "Uma vez por sessão, quando rolar um Teste com Medo, você pode mudar o resultado para Esperança.",
+      "description": "Uma vez por descanso longo, quando rolar um Teste com Medo, você pode mudar o resultado para Esperança.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -3155,13 +3177,17 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": true
       },
-      "art": "/compendium/daggerheart/community-features/desgarrado.webp"
+      "art": "/compendium/daggerheart/community-features/desgarrado.webp",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-class-bard",
@@ -3671,7 +3697,7 @@
       "category": "classes",
       "source": "core",
       "parent": "Bard",
-      "description": "Uma vez por sessão, descreva como você inspira o grupo\ne forneça a você e seus aliados um Dado de Inspiração.\nNo 1º nível, seu Dado de Inspiração é d6. Um personagem\npode rolar o Dado de Inspiração e somar o resultado a um\nteste, teste de reação ou rolagem de dano, ou para recuperar um número de PF igual ao resultado. No fim de cada\nsessão, Dados de Inspiração não utilizados são perdidos.",
+      "description": "Uma vez por descanso longo, descreva como você inspira o grupo\ne forneça a você e seus aliados um Dado de Inspiração.\nNo 1º nível, seu Dado de Inspiração é d6. Um personagem\npode rolar o Dado de Inspiração e somar o resultado a um\nteste, teste de reação ou rolagem de dano, ou para recuperar um número de PF igual ao resultado. Ao iniciar um descanso longo, Dados de Inspiração não utilizados são perdidos.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -3681,13 +3707,18 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": true,
         "hope": false,
         "fear": false
       },
-      "art": "/compendium/daggerheart/class-features/inspiracao.webp"
+      "art": "/compendium/daggerheart/class-features/inspiracao.webp",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd",
+        "expiresAt": "longRestStart"
+      }
     },
     {
       "id": "core-classFeature-prestidigitation",
@@ -3744,7 +3775,7 @@
       "category": "classes",
       "source": "core",
       "parent": "Seraph",
-      "description": "No início de cada sessão, role um número de d4 igual\nao atributo de conjuração de sua subclasse e coloque-os\nsobre o espaço apropriado na ficha de personagem.\nEles são seus Dados de Oração. Você pode gastar\nqualquer número de Dados de Oração para auxiliar a\nsi mesmo ou um aliado até o alcance distante. Você\npode usar o valor de um dado gasto para reduzir o dano\nsofrido, somá-lo ao resultado de uma rolagem após ela\nser feita ou receber um número de Pontos de Esperança\nigual ao resultado. No fim de cada sessão, Dados de\nOração não utilizados são perdidos.",
+      "description": "Ao terminar um descanso longo, role um número de d4 igual\nao atributo de conjuração de sua subclasse e coloque-os\nsobre o espaço apropriado na ficha de personagem.\nEles são seus Dados de Oração. Você pode gastar\nqualquer número de Dados de Oração para auxiliar a\nsi mesmo ou um aliado até o alcance distante. Você\npode usar o valor de um dado gasto para reduzir o dano\nsofrido, somá-lo ao resultado de uma rolagem após ela\nser feita ou receber um número de Pontos de Esperança\nigual ao resultado. Ao iniciar um descanso longo, Dados de\nOração não utilizados são perdidos.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -3754,13 +3785,17 @@
           "Distante"
         ],
         "frequency": [
-          "No início de cada sessão"
+          "Ao terminar um descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
-      "art": "/compendium/daggerheart/class-features/dados-de-oracao.webp"
+      "art": "/compendium/daggerheart/class-features/dados-de-oracao.webp",
+      "sessionRest": {
+        "expiresAt": "longRestStart",
+        "initializesAt": "longRestEnd"
+      }
     },
     {
       "id": "core-classFeature-frontline-tank",
@@ -5079,7 +5114,7 @@
       "category": "subclasses",
       "source": "core",
       "parent": "Call Of The Slayer",
-      "description": "Ao rolar com Esperança, você pode colocar um d6 nesta carta em vez de receber uma Esperança, adicionando esse dado aos seus Dados de Matança (máximo de Dados de Matança igual à sua Proficiência). Ao fazer um teste de ataque ou uma rolagem de dano, você pode gastar um número qualquer de Dados de Matança e somar seus resultados à rolagem. No fim de cada sessão, Dados de Matança não utilizados são perdidos; você ganha uma Esperança por cada dado perdido desta forma.",
+      "description": "Ao rolar com Esperança, você pode colocar um d6 nesta carta em vez de receber uma Esperança, adicionando esse dado aos seus Dados de Matança (máximo de Dados de Matança igual à sua Proficiência). Ao fazer um teste de ataque ou uma rolagem de dano, você pode gastar um número qualquer de Dados de Matança e somar seus resultados à rolagem. Ao iniciar um descanso longo, Dados de Matança não utilizados são perdidos; você ganha uma Esperança por cada dado perdido desta forma.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -5092,7 +5127,10 @@
         "fear": false
       },
       "art": "/compendium/daggerheart/subclass-features/matanca.webp",
-      "tier": "foundation"
+      "tier": "foundation",
+      "sessionRest": {
+        "expiresAt": "longRestStart"
+      }
     },
     {
       "id": "core-subclassFeature-thrive-in-chaos",
@@ -5305,7 +5343,7 @@
       "category": "subclasses",
       "source": "core",
       "parent": "Wordsmith",
-      "description": "Suas palavras comoventes animam as pessoas. Uma vez por sessão, ao encorajar um aliado, você pode fazer um dos seguintes:\n• Ajudá-lo sem gastar Esperança.\n• Dar um movimento de repouso adicional para ele usar em seu próximo descanso.\n• Permitir que ele encontre uma ferramenta ou objeto mundano de que necessite.",
+      "description": "Suas palavras comoventes animam as pessoas. Uma vez por descanso longo, ao encorajar um aliado, você pode fazer um dos seguintes:\n• Ajudá-lo sem gastar Esperança.\n• Dar um movimento de repouso adicional para ele usar em seu próximo descanso.\n• Permitir que ele encontre uma ferramenta ou objeto mundano de que necessite.",
       "mechanics": {
         "costs": [
           {
@@ -5321,14 +5359,18 @@
           "Próximo"
         ],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
       "art": "/compendium/daggerheart/subclass-features/eloquente.webp",
-      "tier": "specialization"
+      "tier": "specialization",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-subclassFeature-iron-will",
@@ -6110,7 +6152,7 @@
       "category": "subclasses",
       "source": "core",
       "parent": "Syndicate",
-      "description": "Você pode usar Contatos três vezes por sessão. As seguintes opções são adicionadas à lista de benefícios que você pode escolher quando a usa:\n• Quando você marca um Ponto de Vida ou mais, ele pode correr em sua defesa, reduzindo o número de PV marcados em 1.\n• Quando você faz um teste de Presença em uma conversa, ele pode ajudar, permitindo que você use um d20 como seu Dado de Esperança.",
+      "description": "Você pode usar Contatos três vezes por descanso longo. As seguintes opções são adicionadas à lista de benefícios que você pode escolher quando a usa:\n• Quando você marca um Ponto de Vida ou mais, ele pode correr em sua defesa, reduzindo o número de PV marcados em 1.\n• Quando você faz um teste de Presença em uma conversa, ele pode ajudar, permitindo que você use um d20 como seu Dado de Esperança.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -6120,14 +6162,15 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Por sessão"
+          "por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
       "art": "/compendium/daggerheart/subclass-features/reforcos-confiaveis.webp",
-      "tier": "mastery"
+      "tier": "mastery",
+      "sessionRest": {}
     },
     {
       "id": "core-subclassFeature-ruthless-predator",
@@ -6467,7 +6510,7 @@
       "category": "subclasses",
       "source": "core",
       "parent": "Syndicate",
-      "description": "Uma vez por sessão, você pode convocar brevemente um contato escuso. Escolha um dos benefícios abaixo e descreva o que fez seu contato vir ajudá-lo agora:\n• Ele fornece 1 punhado de ouro, uma ferramenta única ou um objeto mundano necessário para a situação.\n• A ajuda dele fornece um bônus de +3 no resultado de seu Dado de Medo ou Esperança no seu próximo teste.\n• Na próxima vez que você causar dano, ele atira das sombras, somando 2d8 à sua rolagem de dano.",
+      "description": "Uma vez por descanso longo, você pode convocar brevemente um contato escuso. Escolha um dos benefícios abaixo e descreva o que fez seu contato vir ajudá-lo agora:\n• Ele fornece 1 punhado de ouro, uma ferramenta única ou um objeto mundano necessário para a situação.\n• A ajuda dele fornece um bônus de +3 no resultado de seu Dado de Medo ou Esperança no seu próximo teste.\n• Na próxima vez que você causar dano, ele atira das sombras, somando 2d8 à sua rolagem de dano.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -6477,14 +6520,18 @@
           "Próximo"
         ],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": true
       },
       "art": "/compendium/daggerheart/subclass-features/contatos.webp",
-      "tier": "specialization"
+      "tier": "specialization",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-subclassFeature-comaraderie",
@@ -6495,7 +6542,7 @@
       "category": "subclasses",
       "source": "core",
       "parent": "Call Of The Brave",
-      "description": "Sua bravura inabalável é um ponto de encontro para seus aliados. Você pode iniciar uma Rolagem Combinada adicional por sessão. Além disso, quando um aliado inicia uma Rolagem Combinada com você, ele só precisa gastar 2 Esperança para fazer isso.",
+      "description": "Sua bravura inabalável é um ponto de encontro para seus aliados. Você pode iniciar uma Rolagem Combinada adicional por descanso longo. Além disso, quando um aliado inicia uma Rolagem Combinada com você, ele só precisa gastar 2 Esperança para fazer isso.",
       "mechanics": {
         "costs": [
           {
@@ -6509,14 +6556,18 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Por sessão"
+          "por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
       "art": "/compendium/daggerheart/subclass-features/camaradagem.webp",
-      "tier": "mastery"
+      "tier": "mastery",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-subclassFeature-martial-preparation",
@@ -8656,7 +8707,7 @@
       "category": "subclasses",
       "source": "srd2",
       "parent": "Moon",
-      "description": "Uma vez por sessão, conjure uma coluna de luz da lua que ilumina uma área em alcance Próximo até o fim da cena. Sob essa luz, você e seus aliados ganham +1 nos Testes de Conjuração e enxergam através de ilusões.",
+      "description": "Uma vez por descanso longo, conjure uma coluna de luz da lua que ilumina uma área em alcance Próximo até o fim da cena. Sob essa luz, você e seus aliados ganham +1 nos Testes de Conjuração e enxergam através de ilusões.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -8666,14 +8717,18 @@
           "Próximo"
         ],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": false,
         "fear": false
       },
       "art": "/compendium/daggerheart/subclasses/lunar.webp",
-      "tier": "specialization"
+      "tier": "specialization",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "srd2-subclassFeature-ire-of-pale-light",
@@ -8710,7 +8765,7 @@
       "category": "subclasses",
       "source": "srd2",
       "parent": "Moon",
-      "description": "No início de cada sessão, role um d6 e coloque-o nesta carta. Até o fim da sessão, ganhe o efeito correspondente:\n\n• 1 — Lua Nova: gaste 1 de Esperança para anular Dano Menor.\n• 2–3 — Lua Crescente: ganhe +2 nas rolagens de dano.\n• 4 — Lua Cheia: ganhe +3 nos limiares de dano.\n• 5–6 — Lua Minguante: ganhe +1 na Evasão.\n\nUma vez por descanso, gaste 1 de Esperança para aumentar em 1 o valor desse dado. Ao aumentar um resultado 6, ele se torna 1.",
+      "description": "Ao terminar um descanso longo, role um d6 e coloque-o nesta carta. Até iniciar um descanso longo, ganhe o efeito correspondente:\n\n• 1 — Lua Nova: gaste 1 de Esperança para anular Dano Menor.\n• 2–3 — Lua Crescente: ganhe +2 nas rolagens de dano.\n• 4 — Lua Cheia: ganhe +3 nos limiares de dano.\n• 5–6 — Lua Minguante: ganhe +1 na Evasão.\n\nUma vez por descanso, gaste 1 de Esperança para aumentar em 1 o valor desse dado. Ao aumentar um resultado 6, ele se torna 1.",
       "mechanics": {
         "costs": [
           {
@@ -8724,7 +8779,7 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "No início de cada sessão",
+          "Ao terminar um descanso longo",
           "Uma vez por descanso"
         ],
         "reaction": false,
@@ -8732,7 +8787,11 @@
         "fear": false
       },
       "art": "/compendium/daggerheart/subclasses/lunar.webp",
-      "tier": "mastery"
+      "tier": "mastery",
+      "sessionRest": {
+        "expiresAt": "longRestStart",
+        "initializesAt": "longRestEnd"
+      }
     },
     {
       "id": "core-domainCard-forager",
@@ -12540,7 +12599,7 @@
       "category": "domains",
       "source": "core",
       "parent": null,
-      "description": "Após você ou um aliado Próximo usar uma habilidade com limite de uso (como uma vez por descanso ou uma vez por sessão), você pode gastar uma quantidade qualquer de Esperança e rolar um número equivalente de 1d6{d6}. Se tirar 6 em qualquer dado, a habilidade pode ser usada novamente.",
+      "description": "Após você ou um aliado Próximo usar uma habilidade com limite de uso (como uma vez por descanso ou uma vez por descanso longo), você pode gastar uma quantidade qualquer de Esperança e rolar um número equivalente de 1d6{d6}. Se tirar 6 em qualquer dado, a habilidade pode ser usada novamente.",
       "mechanics": {
         "costs": [],
         "damage": [],
@@ -12551,7 +12610,7 @@
         ],
         "frequency": [
           "Uma vez por descanso",
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
@@ -12562,7 +12621,8 @@
       "domain": "splendor",
       "recallCost": 3,
       "artSource": "https://github.com/Foundryborne/daggerheart",
-      "artLicense": "Darrington Press Community Gaming License (DPCGL)"
+      "artLicense": "Darrington Press Community Gaming License (DPCGL)",
+      "sessionRest": {}
     },
     {
       "id": "core-domainCard-inevitable",
@@ -14376,7 +14436,7 @@
       "category": "domains",
       "source": "core",
       "parent": null,
-      "description": "No início da sessão, coloque um número de marcadores igual ao seu atributo de conjuração nesta carta.\nFaça um Teste de Conjuração contra um alvo Distante e gaste qualquer número de marcadores para canalizar energia bruta de seu interior e liberá-la contra ele. Em um sucesso, role uma quantidade de d10 igual ao número de marcadores que gastou e cause o resultado deles como dano mágico ao alvo. Marque um Fadiga para recarregar esta carta com marcadores (até uma quantidade igual ao seu atributo de conjuração).\nNo fim de cada sessão, marcadores não utilizados são perdidos.",
+      "description": "Ao terminar um descanso longo, coloque um número de marcadores igual ao seu atributo de conjuração nesta carta.\nFaça um Teste de Conjuração contra um alvo Distante e gaste qualquer número de marcadores para canalizar energia bruta de seu interior e liberá-la contra ele. Em um sucesso, role uma quantidade de d10 igual ao número de marcadores que gastou e cause o resultado deles como dano mágico ao alvo. Marque um Fadiga para recarregar esta carta com marcadores (até uma quantidade igual ao seu atributo de conjuração).\nAo iniciar um descanso longo, marcadores não utilizados são perdidos.",
       "mechanics": {
         "costs": [
           {
@@ -14403,7 +14463,11 @@
       "domain": "arcana",
       "recallCost": 1,
       "artSource": "https://github.com/Foundryborne/daggerheart",
-      "artLicense": "Darrington Press Community Gaming License (DPCGL)"
+      "artLicense": "Darrington Press Community Gaming License (DPCGL)",
+      "sessionRest": {
+        "expiresAt": "longRestStart",
+        "initializesAt": "longRestEnd"
+      }
     },
     {
       "id": "core-domainCard-rise-up",
@@ -26431,7 +26495,7 @@
       "category": "equipment",
       "source": "core",
       "parent": null,
-      "description": "Uma vez por sessão, você pode gastar 5 Esperança para iniciar um teste em dupla com três personagens em vez de dois.",
+      "description": "Uma vez por descanso longo, você pode gastar 5 Esperança para iniciar um teste em dupla com três personagens em vez de dois.",
       "mechanics": {
         "costs": [
           {
@@ -26445,14 +26509,18 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": false
       },
       "art": "/compendium/daggerheart/equipment/core-loot-belt-of-unity.webp",
-      "rarity": "very-rare"
+      "rarity": "very-rare",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-loot-charging-quiver",
@@ -26511,7 +26579,7 @@
       "category": "equipment",
       "source": "core",
       "parent": null,
-      "description": "Uma vez por sessão, quando o mestre gastar Medo, você pode gastar 4 Esperança para cancelar os efeitos gerados por este gasto de Medo.",
+      "description": "Uma vez por descanso longo, quando o mestre gastar Medo, você pode gastar 4 Esperança para cancelar os efeitos gerados por este gasto de Medo.",
       "mechanics": {
         "costs": [
           {
@@ -26530,14 +26598,18 @@
         "difficulties": [],
         "ranges": [],
         "frequency": [
-          "Uma vez por sessão"
+          "Uma vez por descanso longo"
         ],
         "reaction": false,
         "hope": true,
         "fear": true
       },
       "art": "/compendium/daggerheart/equipment/core-loot-ring-of-unbreakable-resolve.webp",
-      "rarity": "very-rare"
+      "rarity": "very-rare",
+      "sessionRest": {
+        "useLimit": 1,
+        "refreshAt": "longRestEnd"
+      }
     },
     {
       "id": "core-loot-clay-companion",

@@ -4,6 +4,8 @@ import {
   createDemoCampaignTimeState,
 } from "@/lib/campaignTime";
 import type { CampaignTimeState } from "@/lib/campaignTime";
+import { trackRestAbilityActivation, type RestCycle } from "@/lib/longRest";
+import { sessionRuleText } from "@/lib/sessionRestRules";
 import {
   createInitialCraftingState,
   ensureCraftingState,
@@ -223,6 +225,7 @@ export type DaggerheartCharacterData = {
   animalCompanion?: AnimalCompanion;
   trackers?: CharacterTracker[];
   transformation?: CharacterTransformation;
+  restCycle?: RestCycle;
 };
 
 export type Quest = {
@@ -520,9 +523,19 @@ export function ensureGameStateCharacterModel(state: GameState): GameState {
       character.daggerheart = { ...character.daggerheart, animalCompanion: nextCompanion };
     }
   }
-  const trackers = character.daggerheart
+  const reconciledTrackers = character.daggerheart
     ? reconcileDaggerheartAdvancementTrackers(character)
     : currentTrackers;
+  const adaptedTrackers = state.campaign.system === "Daggerheart" ? reconciledTrackers?.map(tracker => {
+    const description = tracker.description === undefined ? undefined : sessionRuleText(tracker.description);
+    return description === tracker.description ? tracker : { ...tracker, description };
+  }) : reconciledTrackers;
+  const trackers = adaptedTrackers?.some((tracker, index) => tracker !== reconciledTrackers?.[index]) ? adaptedTrackers : reconciledTrackers;
+  const adaptedInventory = state.campaign.system === "Daggerheart" ? state.inventory.map(item => {
+    const detail = sessionRuleText(item.detail);
+    return detail === item.detail ? item : { ...item, detail };
+  }) : state.inventory;
+  const inventory = adaptedInventory.some((item, index) => item !== state.inventory[index]) ? adaptedInventory : state.inventory;
   if (character.daggerheart && trackers !== currentTrackers) {
     character.daggerheart = { ...character.daggerheart, trackers };
   }
@@ -539,10 +552,11 @@ export function ensureGameStateCharacterModel(state: GameState): GameState {
     || character.proficiency !== state.character.proficiency
     || character.progression !== state.character.progression
     || trackers !== currentTrackers
+    || inventory !== state.inventory
     || character.daggerheart !== state.character.daggerheart
     || character.death !== state.character.death
     || campaign !== state.campaign;
-  return changed ? { ...state, resourceModelVersion: RESOURCE_MODEL_VERSION, campaign, character } : state;
+  return changed ? { ...state, resourceModelVersion: RESOURCE_MODEL_VERSION, campaign, character, inventory } : state;
 }
 
 const TIMELINE_SCHEMA_VERSION = 2;
@@ -672,6 +686,7 @@ export function inferLegacyRestartSnapshot(state: GameState): CampaignRestartSna
   character.progression = undefined;
   if (character.daggerheart) {
     character.daggerheart.transformation = undefined;
+    character.daggerheart.restCycle = undefined;
     character.daggerheart.trackers = initialTrackersForCharacter(sourceClass, 1, sourceSubclass);
     if (character.daggerheart.animalCompanion) {
       character.daggerheart.animalCompanion.stress = 0;
@@ -833,7 +848,17 @@ export const initialState: GameState = {
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
 export function executeCommand(state: GameState, command: GameCommand, actor: Actor = "player", record = true): GameState {
-  const next = structuredClone(state) as GameState;
+  let source = state;
+  if (command.type === "tracker") {
+    const tracker = state.character.daggerheart?.trackers?.find(entry => entry.id === command.trackerId);
+    if (tracker && command.dieIndex === undefined) {
+      const requested = command.mode === "adjust" ? tracker.value + command.value : command.value;
+      const activation = trackRestAbilityActivation(state, tracker, requested);
+      if (!activation.result.ok) return state;
+      source = activation.state;
+    }
+  }
+  const next = structuredClone(source) as GameState;
   const campaignMinute = next.time?.campaignMinute ?? 0;
   let label = "";
   let reverse: GameCommand | undefined;

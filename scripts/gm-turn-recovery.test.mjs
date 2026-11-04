@@ -47,7 +47,7 @@ test("a bard speaking to inspire supplies the owned Inspiration rules and tracke
   const packet = JSON.parse(content.split("ESTADO ATUAL DO ORACLE:\n")[1].split("\n\nMENSAGEM DO JOGADOR:")[0]);
   const ability = packet.characterAbilities?.find((item) => item.sourceId === "Rally");
   assert.ok(ability, "The GM must receive the full rules of Inspiration, not just its display name");
-  assert.match(ability.description, /Uma vez por sessão/);
+  assert.match(ability.description, /Uma vez por descanso longo/);
   assert.match(ability.description, /Dado de Inspiração/);
   assert.ok(packet.abilityIntentHints?.some((item) => item.sourceId === "Rally"));
   assert.equal(state.character.daggerheart.trackers[0].active, false);

@@ -156,11 +156,11 @@ export function initialTrackersForCharacter(classId: string, level: number, subc
       dieSides: 4,
       dice: [],
       source: { type: "classFeature", id: "Prayer Dice" },
-      description: "No início da sessão, role d4 em quantidade igual ao atributo de Conjuração da subclasse. Dados gastos são removidos até a próxima sessão.",
+      description: "Ao terminar um descanso longo, role d4 em quantidade igual ao atributo de Conjuração da subclasse. Ao iniciar um descanso longo, Dados de Oração não usados são perdidos.",
     });
   }
   if (classId === "Bard") {
-    trackers.push({ ...die("bard-rally", "Dado de Inspiração", level >= 5 ? 8 : 6, { type: "classFeature", id: "Rally" }), description: "Uma vez por sessão, a Inspiração fornece este dado. No 5º nível, ele aumenta de d6 para d8." });
+    trackers.push({ ...die("bard-rally", "Dado de Inspiração", level >= 5 ? 8 : 6, { type: "classFeature", id: "Rally" }), description: "Uma vez por descanso longo, a Inspiração fornece este dado. O uso é renovado ao terminar um descanso longo; o dado não usado é perdido ao iniciar um descanso longo. No 5º nível, ele aumenta de d6 para d8." });
   }
   if (classId === "Summoner") {
     trackers.push(
