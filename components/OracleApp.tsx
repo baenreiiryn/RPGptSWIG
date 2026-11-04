@@ -174,6 +174,7 @@ function DiceTray({
   pendingKind,
   daggerheart,
   onRoll,
+  onClose,
 }: {
   open: boolean;
   pendingFormula?: string;
@@ -181,6 +182,7 @@ function DiceTray({
   pendingKind?: string;
   daggerheart: boolean;
   onRoll: (formula: string, duality: boolean) => void;
+  onClose: () => void;
 }) {
   const [counts, setCounts] = useState<DiceCounts>(emptyDiceCounts);
   const [duality, setDuality] = useState(false);
@@ -229,9 +231,10 @@ function DiceTray({
   }
 
   return (
-    <div className="diceTray" onClick={(event) => event.stopPropagation()}>
+    <div className="diceTray" id="session-dice-tray" role="dialog" aria-label="Rolador de dados">
       <div className="diceTrayHead">
         <div><small>ROLADOR</small><strong>{pendingFormula ? "Rolagem solicitada" : "Monte sua rolagem"}</strong></div>
+        <button type="button" onClick={onClose} aria-label="Fechar rolador de dados" title="Fechar rolador de dados">×</button>
       </div>
 
       {pendingFormula && <div className="dicePendingFormula"><small>FÓRMULA</small><b>{pendingFormula}</b></div>}
@@ -848,6 +851,7 @@ export default function OracleApp() {
   const [sceneImageRetryNonce, setSceneImageRetryNonce] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDiceTray, setShowDiceTray] = useState(false);
+  const diceControlRef = useRef<HTMLDivElement>(null);
   const [diceAppearances, setDiceAppearances] = useState<DiceAppearanceOverrides>({});
   const [activeDiceRoll, setActiveDiceRoll] = useState<DiceRollResult | null>(null);
   const [diceNote, setDiceNote] = useState("");
@@ -894,6 +898,24 @@ export default function OracleApp() {
   useEffect(() => {
     setDiceAppearances(readDiceAppearanceOverrides());
   }, []);
+
+  useEffect(() => {
+    if (!showDiceTray) return;
+    function closeOnOutsidePointer(event: PointerEvent) {
+      if (event.target instanceof Node && !diceControlRef.current?.contains(event.target)) setShowDiceTray(false);
+    }
+    function closeOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setShowDiceTray(false);
+      diceControlRef.current?.querySelector<HTMLButtonElement>(".sessionDiceButton")?.focus();
+    }
+    document.addEventListener("pointerdown", closeOnOutsidePointer, true);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer, true);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [showDiceTray]);
 
   useEffect(() => {
     if (view !== "memory") setMemoryMode("timeline");
@@ -2652,12 +2674,27 @@ export default function OracleApp() {
     );
   }
 
+  const chatConnectionLabel = bridge.account?.connected ? "conectado" : bridge.status === "missing" ? "bridge offline" : "conectar";
+  const campaignControls = (
+    <div className="campaignControls" role="group" aria-label="Navegação e conexões">
+      <button type="button" className="campaignControl" onClick={goHome} aria-label="Voltar à tela principal" title="Voltar à tela principal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3Z" /><path d="M9 20v-7h6v7" /></svg>
+      </button>
+      <button type="button" className={`campaignControl cloudStatus ${cloud.status}`} onClick={() => setShowSync(true)} aria-label={`Nuvem: ${cloudLabel}`} title={`Nuvem: ${cloudLabel}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 19a5 5 0 0 1-1-9.9A6.5 6.5 0 0 1 18.5 8 5.5 5.5 0 0 1 18 19Z" /></svg><i aria-hidden="true" />
+      </button>
+      <button type="button" className={`campaignControl connection ${bridge.account?.connected ? "connected" : ""}`} onClick={connectChatGPT} aria-label={`ChatGPT: ${chatConnectionLabel}`} title={`ChatGPT: ${chatConnectionLabel}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H8l-5 2 1.5-5A8.5 8.5 0 1 1 21 11.5Z" /><path d="m12 7 1.3 3.2 3.2 1.3-3.2 1.3L12 16l-1.3-3.2-3.2-1.3 3.2-1.3Z" /></svg><i aria-hidden="true" />
+      </button>
+    </div>
+  );
+
   return (
-    <main className="appShell">
+    <main className={`appShell ${view === "session" ? "sessionScreen" : ""}`}>
       <div className="ambient ambientOne" />
       <div className="ambient ambientTwo" />
 
-      <header className="topbar">
+      {view !== "session" && <header className="topbar">
         <button className="brand brandButton" onClick={goHome}>
           <img src="/oracle-mark.svg" alt="" />
           <div><b>ORACLE</b><span>RPG</span></div>
@@ -2667,14 +2704,9 @@ export default function OracleApp() {
           <strong>{state.campaign.name}</strong>
         </div>
         <div className="topActions">
-          <button className={`cloudStatus ${cloud.status}`} onClick={() => setShowSync(true)}>
-            <i /> Nuvem <span>{cloudLabel}</span>
-          </button>
-          <button className={`connection ${bridge.account?.connected ? "connected" : ""}`} onClick={connectChatGPT}>
-            <i /> ChatGPT <span>{bridge.account?.connected ? "conectado" : bridge.status === "missing" ? "bridge offline" : "conectar"}</span>
-          </button>
+          {campaignControls}
         </div>
-      </header>
+      </header>}
 
       <nav className="mobileNav">
         {([
@@ -2702,13 +2734,17 @@ export default function OracleApp() {
           {view === "session" && (
             <div className="sessionView">
               <div className="sessionHud">
+                {campaignControls}
                 <CampaignClockBar time={state.time} onOpenCalendar={() => setShowCalendar(true)} />
-                <div className="sessionDiceControl">
+                <div className="sessionDiceControl" ref={diceControlRef}>
                   <button
                     className={`sessionDiceButton ${showDiceTray ? "active" : ""} ${state.pendingRoll ? "pending" : ""}`}
                     type="button"
                     title="Abrir dados"
                     aria-label="Abrir dados"
+                    aria-expanded={showDiceTray}
+                    aria-controls="session-dice-tray"
+                    aria-haspopup="dialog"
                     disabled={gmBusy || Boolean(activeDiceRoll)}
                     onClick={() => setShowDiceTray((value) => !value)}
                   >
@@ -2722,6 +2758,7 @@ export default function OracleApp() {
                     pendingKind={state.pendingRoll?.rollKind}
                     daggerheart={state.campaign.system === "Daggerheart"}
                     onRoll={(formula, duality) => startDiceRoll(formula, "tray", duality)}
+                    onClose={() => setShowDiceTray(false)}
                   />
                 </div>
               </div>
