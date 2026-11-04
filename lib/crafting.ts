@@ -514,7 +514,7 @@ export function resolveCraftAttempt(
   value: CraftingState,
   inventory: CraftInventoryItem[],
   recipe: CraftRecipe,
-  roll: { system: "daggerheart" | "d20"; dice: number[] },
+  roll: { system: "daggerheart" | "d20"; dice: number[]; modifier?: number },
 ) {
   const crafting = clone(ensureCraftingState(value));
   const attempt = crafting.pendingAttempt;
@@ -527,7 +527,7 @@ export function resolveCraftAttempt(
   if (!isBaseRarity(rarity)) throw new Error("Receita Lendária não pode ser produzida diretamente.");
   const dc = attempt.dc ?? (roll.system === "daggerheart" ? DH_DC[rarity] : D20_DC[rarity]);
   let critical = false;
-  let total = level;
+  let total = level + (Number.isFinite(roll.modifier) ? roll.modifier! : 0);
   if (roll.system === "daggerheart") {
     if (roll.dice.length < 2) throw new Error("Craft Daggerheart precisa dos dois d12 da rolagem de Dualidade.");
     const [a, b] = roll.dice;

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T15:37:30.740Z",
+  "generatedAt": "2026-11-04T18:06:43.075Z",
   "sources": {
     "translation": "https://github.com/etiagoabreu/daggerheart-translation-pt-BR",
     "art": "https://github.com/mordachai/art-for-daggerheart",
@@ -44,6 +44,12 @@
       "name": "Formas de Fera",
       "icon": "♧",
       "description": "Formas do Druida, atributos, ataques e habilidades por patamar"
+    },
+    {
+      "id": "transformations",
+      "name": "Transformações",
+      "icon": "◭",
+      "description": "Lobisomem, Vampiro, Fantasma, Reanimado, Metamorfo e Semi-Deus da expansão"
     },
     {
       "id": "domains",
@@ -32282,6 +32288,518 @@
       },
       "art": "/compendium/daggerheart/adversaries/Cult%20Initiate.webp",
       "motivesAndTactics": "seguir ordens, obter poder, buscar conhecimento proibido"
+    },
+    {
+      "id": "expansion-transformationFeature-wolf-form",
+      "sourceId": "Wolf Form",
+      "name": "Forma Lupina",
+      "originalName": "Wolf Form",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Werewolf",
+      "description": "Quando marcar 1 ou mais Pontos de Vida, você pode também marcar 1 Ponto de Fadiga para assumir sua Forma Lupina. Enquanto estiver nessa forma, você ganha o Dado do Lobo, um d10 que você adiciona às suas rolagens de ataque e dano. Sempre que ganhar Esperança quando estiver na forma Lupina, em vez disso, você marca 1 Ponto de Fadiga.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          }
+        ],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": true,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/werewolf.webp",
+      "transformationKey": "werewolf"
+    },
+    {
+      "id": "expansion-transformationFeature-frenzy",
+      "sourceId": "Frenzy",
+      "name": "Frenesi",
+      "originalName": "Frenzy",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Werewolf",
+      "description": "Quando marcar seu último Ponto de Fadiga na Forma Lupina, você entra em Frenesi. Role uma quantidade de d20 igual ao seu Patamar atual. Com o resultado dessa rolagem, você causa dano físico automático a todas as criaturas em alcance Muito Próximo a você. Após isso, sua Forma Lupina se desfaz e você volta à sua forma normal.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [
+          "Muito Próximo"
+        ],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/werewolf.webp",
+      "transformationKey": "werewolf"
+    },
+    {
+      "id": "expansion-transformation-werewolf",
+      "sourceId": "Werewolf",
+      "name": "Lobisomem",
+      "originalName": "Werewolf",
+      "type": "transformation",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": null,
+      "description": "Forma Lupina\nQuando marcar 1 ou mais Pontos de Vida, você pode também marcar 1 Ponto de Fadiga para assumir sua Forma Lupina. Enquanto estiver nessa forma, você ganha o Dado do Lobo, um d10 que você adiciona às suas rolagens de ataque e dano. Sempre que ganhar Esperança quando estiver na forma Lupina, em vez disso, você marca 1 Ponto de Fadiga.\n\nFrenesi\nQuando marcar seu último Ponto de Fadiga na Forma Lupina, você entra em Frenesi. Role uma quantidade de d20 igual ao seu Patamar atual. Com o resultado dessa rolagem, você causa dano físico automático a todas as criaturas em alcance Muito Próximo a você. Após isso, sua Forma Lupina se desfaz e você volta à sua forma normal.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          }
+        ],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [
+          "Muito Próximo"
+        ],
+        "frequency": [],
+        "reaction": false,
+        "hope": true,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/werewolf.webp",
+      "transformationKey": "werewolf"
+    },
+    {
+      "id": "expansion-transformationFeature-fangs",
+      "sourceId": "Fangs",
+      "name": "Presas",
+      "originalName": "Fangs",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Vampire",
+      "description": "Faça um teste de Força para morder alguém em alcance Corpo-a-Corpo, causando d8 de Dano Físico usando sua Proficiência.",
+      "mechanics": {
+        "costs": [],
+        "damage": [
+          {
+            "formula": "d8",
+            "type": "físico"
+          }
+        ],
+        "tests": [
+          "Teste de Força"
+        ],
+        "difficulties": [],
+        "ranges": [
+          "Corpo-a-Corpo"
+        ],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/vampire.webp",
+      "transformationKey": "vampire"
+    },
+    {
+      "id": "expansion-transformationFeature-feed",
+      "sourceId": "Feed",
+      "name": "Alimentar-se",
+      "originalName": "Feed",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Vampire",
+      "description": "Em um sucesso no ataque de Presas contra uma criatura viva, você pode marcar 1 Ponto de Fadiga para Alimentar-se. Coloque uma quantidade de marcadores na carta Vampiro igual à quantidade de Pontos de Vida que o alvo marcar. Você pode armazenar até um máximo de 5 marcadores por vez. Gaste 1 marcador antes de um teste de ataque para transformar seu Dado de Medo em um d20 em vez de um d12. Quando faz um Descanso Longo, remova 1 marcador. Se não houver nenhum marcador na sua carta Vampiro, todos seus testes de ação e reação são feitos com desvantagem.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          }
+        ],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": true
+      },
+      "art": "/compendium/daggerheart/transformations/vampire.webp",
+      "transformationKey": "vampire"
+    },
+    {
+      "id": "expansion-transformation-vampire",
+      "sourceId": "Vampire",
+      "name": "Vampiro",
+      "originalName": "Vampire",
+      "type": "transformation",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": null,
+      "description": "Presas\nFaça um teste de Força para morder alguém em alcance Corpo-a-Corpo, causando d8 de Dano Físico usando sua Proficiência.\n\nAlimentar-se\nEm um sucesso no ataque de Presas contra uma criatura viva, você pode marcar 1 Ponto de Fadiga para Alimentar-se. Coloque uma quantidade de marcadores na carta Vampiro igual à quantidade de Pontos de Vida que o alvo marcar. Você pode armazenar até um máximo de 5 marcadores por vez. Gaste 1 marcador antes de um teste de ataque para transformar seu Dado de Medo em um d20 em vez de um d12. Quando faz um Descanso Longo, remova 1 marcador. Se não houver nenhum marcador na sua carta Vampiro, todos seus testes de ação e reação são feitos com desvantagem.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          }
+        ],
+        "damage": [
+          {
+            "formula": "d8",
+            "type": "físico"
+          }
+        ],
+        "tests": [
+          "Teste de Força"
+        ],
+        "difficulties": [],
+        "ranges": [
+          "Corpo-a-Corpo"
+        ],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": true
+      },
+      "art": "/compendium/daggerheart/transformations/vampire.webp",
+      "transformationKey": "vampire"
+    },
+    {
+      "id": "expansion-transformationFeature-spirit-form",
+      "sourceId": "Spirit Form",
+      "name": "Forma Espíritual",
+      "originalName": "Spirit Form",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Ghost",
+      "description": "Sua forma física pode alternar entre corpórea e incorpórea. Marque 1 Ponto de Fadiga para assumir ou desfazer sua Forma Espiritual. Enquanto estiver em sua Forma Espiritual, você pode atravessar objetos sólidos. Você também fica imune a dano físico, mas sofre o dobro de dano mágico. Você pode gastar 2 Pontos de Esperança para atacar ou interagir com o mundo material.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          },
+          {
+            "resource": "Esperança",
+            "amount": 2,
+            "label": "2 Esperança"
+          }
+        ],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": true,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/ghost.webp",
+      "transformationKey": "ghost"
+    },
+    {
+      "id": "expansion-transformationFeature-ephemeral",
+      "sourceId": "Ephemeral",
+      "name": "Efêmero",
+      "originalName": "Ephemeral",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Ghost",
+      "description": "Marque permanentemente 1 Ponto de Vida quando adquirir a carta Fantasma e quando subir de Patamar. Quando você marcar seu último Ponto de Vida, você deve escolher Sacrifício Glorioso como seu movimento de morte.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/ghost.webp",
+      "transformationKey": "ghost"
+    },
+    {
+      "id": "expansion-transformation-ghost",
+      "sourceId": "Ghost",
+      "name": "Fantasma",
+      "originalName": "Ghost",
+      "type": "transformation",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": null,
+      "description": "Forma Espíritual\nSua forma física pode alternar entre corpórea e incorpórea. Marque 1 Ponto de Fadiga para assumir ou desfazer sua Forma Espiritual. Enquanto estiver em sua Forma Espiritual, você pode atravessar objetos sólidos. Você também fica imune a dano físico, mas sofre o dobro de dano mágico. Você pode gastar 2 Pontos de Esperança para atacar ou interagir com o mundo material.\n\nEfêmero\nMarque permanentemente 1 Ponto de Vida quando adquirir a carta Fantasma e quando subir de Patamar. Quando você marcar seu último Ponto de Vida, você deve escolher Sacrifício Glorioso como seu movimento de morte.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          },
+          {
+            "resource": "Esperança",
+            "amount": 2,
+            "label": "2 Esperança"
+          }
+        ],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": true,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/ghost.webp",
+      "transformationKey": "ghost"
+    },
+    {
+      "id": "expansion-transformationFeature-corpse",
+      "sourceId": "Corpse",
+      "name": "Cadáver",
+      "originalName": "Corpse",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Reanimated",
+      "description": "Em caso de falha num teste de Arriscar Tudo, em vez de falhar você pode marcar permanentemente um Ponto de Vida para garantir um sucesso. Quando fizer isso, você ainda usa o valor do Dado de Esperança para distribuir entre seus Pontos de Vida e Pontos de Fadiga.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": true,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/reanimated.webp",
+      "transformationKey": "reanimated"
+    },
+    {
+      "id": "expansion-transformationFeature-stitch-up",
+      "sourceId": "Stitch Up",
+      "name": "Todo Costurado",
+      "originalName": "Stitch Up",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Reanimated",
+      "description": "Durante um descanso, você só pode recuperar Pontos de Vida se tiver acesso aos restos mortais de um cadáver recém falecido. Descreva como usar esses materiais afeta a sua aparência. Você não pode recuperar Pontos de Vida de nenhuma outra forma que não seja com uma ação de repouso ou o movimento de morte Arrisca Tudo.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/reanimated.webp",
+      "transformationKey": "reanimated"
+    },
+    {
+      "id": "expansion-transformation-reanimated",
+      "sourceId": "Reanimated",
+      "name": "Reanimado",
+      "originalName": "Reanimated",
+      "type": "transformation",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": null,
+      "description": "Cadáver\nEm caso de falha num teste de Arriscar Tudo, em vez de falhar você pode marcar permanentemente um Ponto de Vida para garantir um sucesso. Quando fizer isso, você ainda usa o valor do Dado de Esperança para distribuir entre seus Pontos de Vida e Pontos de Fadiga.\n\nTodo Costurado\nDurante um descanso, você só pode recuperar Pontos de Vida se tiver acesso aos restos mortais de um cadáver recém falecido. Descreva como usar esses materiais afeta a sua aparência. Você não pode recuperar Pontos de Vida de nenhuma outra forma que não seja com uma ação de repouso ou o movimento de morte Arrisca Tudo.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": true,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/reanimated.webp",
+      "transformationKey": "reanimated"
+    },
+    {
+      "id": "expansion-transformationFeature-change-shape",
+      "sourceId": "Change Shape",
+      "name": "Alterar Forma",
+      "originalName": "Change Shape",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Shapeshifter",
+      "description": "Durante um Descanso Longo, você pode usar uma de suas ações de repouso para alternar entre a sua ancestralidade atual para uma outra ancestralidade. Quando fizer isso, você descreve como sua aparência muda.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/shapeshifter.webp",
+      "transformationKey": "shapeshifter"
+    },
+    {
+      "id": "expansion-transformationFeature-only-skin-deep",
+      "sourceId": "Only Skin Deep",
+      "name": "Superficial",
+      "originalName": "Only Skin Deep",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Shapeshifter",
+      "description": "Quando você Alterar Forma, você só ganha o benefícios de uma das habilidades de ancestralidade, que você escolhe quando se transforma na ancestralidade escolhida. Você pode usar uma ação de repouso para alternar de um benefício de ancestralidade para outra.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/shapeshifter.webp",
+      "transformationKey": "shapeshifter"
+    },
+    {
+      "id": "expansion-transformation-shapeshifter",
+      "sourceId": "Shapeshifter",
+      "name": "Metamorfo",
+      "originalName": "Shapeshifter",
+      "type": "transformation",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": null,
+      "description": "Alterar Forma\nDurante um Descanso Longo, você pode usar uma de suas ações de repouso para alternar entre a sua ancestralidade atual para uma outra ancestralidade. Quando fizer isso, você descreve como sua aparência muda.\n\nSuperficial\nQuando você Alterar Forma, você só ganha o benefícios de uma das habilidades de ancestralidade, que você escolhe quando se transforma na ancestralidade escolhida. Você pode usar uma ação de repouso para alternar de um benefício de ancestralidade para outra.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/shapeshifter.webp",
+      "transformationKey": "shapeshifter"
+    },
+    {
+      "id": "expansion-transformationFeature-ichor-of-the-gods",
+      "sourceId": "Ichor of the Gods",
+      "name": "Elixir dos Deuses",
+      "originalName": "Ichor of the Gods",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Demigod",
+      "description": "Seu dado de vantagem é um d10 em vez de um d6.",
+      "mechanics": {
+        "costs": [],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": false
+      },
+      "art": "/compendium/daggerheart/transformations/demigod.webp",
+      "transformationKey": "demigod"
+    },
+    {
+      "id": "expansion-transformationFeature-weight-of-divinity",
+      "sourceId": "Weight of Divinity",
+      "name": "O Peso da Divindade",
+      "originalName": "Weight of Divinity",
+      "type": "transformationFeature",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": "Demigod",
+      "description": "Quando tiver um fracasso com Medo, você deve marcar 1 Ponto de Fadiga ou conceder ao GM 1 Ponto de Medo adicional.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          }
+        ],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": true
+      },
+      "art": "/compendium/daggerheart/transformations/demigod.webp",
+      "transformationKey": "demigod"
+    },
+    {
+      "id": "expansion-transformation-demigod",
+      "sourceId": "Demigod",
+      "name": "Semi-Deus",
+      "originalName": "Demigod",
+      "type": "transformation",
+      "category": "transformations",
+      "source": "expansion",
+      "parent": null,
+      "description": "Elixir dos Deuses\nSeu dado de vantagem é um d10 em vez de um d6.\n\nO Peso da Divindade\nQuando tiver um fracasso com Medo, você deve marcar 1 Ponto de Fadiga ou conceder ao GM 1 Ponto de Medo adicional.",
+      "mechanics": {
+        "costs": [
+          {
+            "resource": "Fadiga",
+            "amount": 1,
+            "label": "1 Fadiga"
+          }
+        ],
+        "damage": [],
+        "tests": [],
+        "difficulties": [],
+        "ranges": [],
+        "frequency": [],
+        "reaction": false,
+        "hope": false,
+        "fear": true
+      },
+      "art": "/compendium/daggerheart/transformations/demigod.webp",
+      "transformationKey": "demigod"
     }
   ]
 }

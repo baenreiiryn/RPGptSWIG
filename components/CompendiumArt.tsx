@@ -11,6 +11,7 @@ export function compendiumGlyph(entry?: Pick<CompendiumEntry, "category" | "type
   if (entry.category === "classes") return entry.type === "subclass" || entry.type === "subclassFeature" ? "△" : "✦";
   if (entry.category === "subclasses") return "△";
   if (entry.category === "beastforms") return "♧";
+  if (entry.category === "transformations") return "◭";
   if (entry.category === "ancestries") return "◐";
   if (entry.category === "communities") return "⌂";
   if (entry.category === "equipment") return "⚔";
@@ -48,6 +49,7 @@ export default function CompendiumArt({
     entry?.category === "communities" ? "communityIconArt" : "",
     entry?.category === "subclasses" ? "subclassIconArt" : "",
     entry?.category === "beastforms" ? "beastformIconArt" : "",
+    entry?.category === "transformations" ? "transformationIconArt" : "",
     entry?.category === "equipment" ? "equipmentIconArt" : "",
   ].filter(Boolean).join(" ");
 

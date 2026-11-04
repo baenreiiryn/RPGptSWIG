@@ -25,7 +25,8 @@ import { oracleTools } from "@/lib/tools";
 import compendium from "./compendium/daggerheart.generated.json" with { type: "json" };
 import type { CompendiumEntry } from "@/lib/compendium/daggerheart";
 import { triggerCampaignMilestoneLevelUp } from "@/lib/daggerheartAdvancement";
-import { changeLongRest, refreshRestAbility, restAbilityAvailability, restCycleFor, useRestAbility } from "@/lib/longRest";
+import { changeLongRest, refreshRestAbility, restAbilityAvailability, restCycleFor, spendLongRestMove, useRestAbility } from "@/lib/longRest";
+import { clearWolfOpportunity, expansionCanHeal, expansionContext, expansionDamage, expansionTransformationAction, setExpansionTransformation } from "@/lib/expansionTransformations";
 import {
   attachCraftPendingRoll,
   awardCraftXp,
@@ -105,6 +106,11 @@ export function gmInstructions(system: string) {
     "TRACKERS: se uma característica, subclasse ou carta possuir contador/dado persistente, use character_tracker_set imediatamente quando a ação ou regra gastar, ganhar, ativar ou alterar esse recurso. O tracker do OracleRPG é a fonte da verdade; não deixe a alteração apenas na narração.",
     "AVANÇO EM DAGGERHEART: níveis são concedidos somente por milestone narrativo, nunca por XP. Quando decidir que o grupo alcançou um milestone que concede nível, use campaign_milestone_level_up uma única vez; a ferramenta cria o level-up pendente e a interface coleta os avanços do jogador antes de alterar o nível.",
     "FORMA DE FERA E OUTRAS TRANSFORMAÇÕES: ao Druida entrar em Forma de Fera, use character_transformation_set com os modificadores/atributos da forma. Ao sair da forma, chame a mesma ferramenta com active=false. Nunca sobrescreva permanentemente os atributos-base do personagem para representar uma forma temporária.",
+    "TRANSFORMAÇÕES DA EXPANSÃO: Lobisomem, Vampiro, Fantasma, Reanimado, Metamorfo e Semi-Deus são cartas persistentes, escolhidas opcionalmente na criação ou adquiridas na história; registre novas aquisições/remoções com character_expansion_transformation_set. Não as registre como Forma de Fera nem invente transformações que o personagem não adquiriu. expansionTransformations contém suas regras traduzidas e estado. Use character_expansion_transformation_action para suas características, inclusive Presas, Alimentar-se, potencializar ataque, Forma Espiritual e Alterar Forma. Não gaste os mesmos recursos novamente por outra ferramenta.",
+    "SEMI-DEUS: ao solicitar um teste com vantagem, envie advantage:true e a fórmula-base SEM o dado de vantagem. O motor acrescenta d10 para Semi-Deus ou d6 normalmente; vantagem cancela a desvantagem de fome. Nunca troque outros d6 (dano, Inspiração, etc.) por d10. O Peso da Divindade só ativa em FRACASSO com Medo, nunca sucesso com Medo nem crítico. Informe target quando conhecido; se a CD estava oculta/indefinida e você adjudicar uma falha com Medo, use character_expansion_transformation_action, transformation:demigod, action:fear-failure, rollId do resultado. A interface exige que o JOGADOR escolha 1 Fadiga ou 1 Medo adicional. Aguarde essa escolha sem aplicar o custo por outra ferramenta. fearGranted é o total histórico de Medo EXTRA já recebido por esta carta, não o saldo atual; não conceda novamente esse Medo.",
+    "DADOS DAS TRANSFORMAÇÕES: informe SEMPRE actionType em request_player_roll: attack, damage, check ou reaction. Envie a fórmula-base (Dualidade continua começando com 2d12): o motor adiciona o Dado do Lobo e a desvantagem de fome e troca o Medo por d20 no ataque potencializado do Vampiro. Não duplique esses modificadores. Presas usa Força e causa Proficiência d8 físicos; registre sucesso por target conhecido ou confirme attackSucceeded em Alimentar-se após adjudicar o resultado registrado. Não alimente contra mortos-vivos nem sem marcar PV.",
+    "DANO E MORTE DAS TRANSFORMAÇÕES: use character_receive_damage com dano bruto e tipo físico/mágico para aplicar a imunidade física e vulnerabilidade mágica da Forma Espiritual antes dos limiares. Para atacar/interagir com o mundo material nessa forma, pague 2 Esperança via action=interact; forAttack=true prepara exatamente um ataque. Frenesi exige a rolagem pendente de Patamar d20 e atinge automaticamente TODAS as criaturas Muito Próximas, incluindo aliados; a forma termina após o resultado. O Fantasma deve usar Glória Final ao marcar o último PV. O Reanimado decide pela interface se usa Cadáver após falhar em Arriscar Tudo; não decida por ele. Reanimado só cura por ação de repouso com restos frescos ou Arriscar Tudo; informe healingSource e freshRemains ao curar. PV permanentes não podem ser curados.",
+    "METAMORFO: Alterar Forma custa uma ação de repouso durante descanso longo registrado. Escolha uma ancestralidade do compêndio e apenas UMA característica dela; não conceda as duas nem preserve características da ancestralidade anterior. Trocar apenas o benefício também pode usar uma ação de descanso curto (shortRest=true, somente se o descanso estiver acontecendo na ficção). O motor registra restMovesSpent no descanso longo, com duas ações-base. Para OUTRAS ações de repouso, use character_rest_move_spend uma vez por escolha antes de aplicar seus benefícios, para compartilhar o saldo. Alterar Forma já registra o custo e não deve ser contado duas vezes. Se uma característica concedeu ações extras, informe availableRestMoves ao iniciar o descanso. A aparência pode ser descrita em appearance.",
     "COMPANHEIRO ANIMAL: quando o companheiro do Patrulheiro sofrer ou limpar Fadiga, atualize-a com animal_companion_adjust_stress.",
     "MORTE: quando todos os PV estiverem marcados, não escolha um movimento de morte pelo jogador e não contorne a interface do OracleRPG. O jogador escolhe Evitar a Morte, Glória Final ou Arriscar Tudo. Se o estado indicar Glória Final, trate a próxima ação declarada do personagem como um crítico automático, conclua sua consequência e então encerre a vida do personagem.",
     "Quando o desfecho depender de uma rolagem do jogador, use request_player_roll. Nunca role pelo jogador nem invente o resultado.",
@@ -184,6 +190,7 @@ export function ownedCharacterAbilities(state: GameState) {
       if (entry) owned.set(entry.id, entry);
     }
   }
+  for (const entry of expansionContext(state).features as unknown as CompendiumEntry[]) owned.set(entry.id, entry);
   return [...owned.values()].map((entry) => ({
     id: entry.id, sourceId: entry.sourceId, name: entry.name, type: entry.type,
     description: entry.description, mechanics: entry.mechanics,
@@ -211,6 +218,7 @@ export function buildTurnInput(state: GameState, playerText: string) {
         campaign: state.campaign,
         character: state.character,
         characterAbilities,
+        expansionTransformations: expansionContext(state),
         restCycle: state.character.daggerheart ? restCycleFor(state) : undefined,
         sessionAbilityUses: restAbilityAvailability(state),
         abilityIntentHints,
@@ -263,7 +271,7 @@ export function executeGmTool(
       campaign: { ...state.campaign, scene },
       sceneVisual: undefined,
     };
-    return { state: next, result: { ok: true, scene, reason, imageRefreshRequired: true } };
+    return { state: clearWolfOpportunity(next), result: { ok: true, scene, reason, imageRefreshRequired: true } };
   }
 
   if (name === "campaign_milestone_level_up") {
@@ -429,7 +437,7 @@ export function executeGmTool(
           rarity: planned.plan.rarity,
           dc: planned.plan.dc,
           successChance: planned.plan.successChance,
-          formula: planned.plan.formula,
+          formula: next.pendingRoll?.formula || planned.plan.formula,
           pendingRoll: next.pendingRoll,
         },
       };
@@ -509,6 +517,7 @@ export function executeGmTool(
         },
       };
     }
+    try {
     const next = requestPlayerRoll(state, {
       label,
       reason,
@@ -516,6 +525,9 @@ export function executeGmTool(
       ...(allowedDice.length ? { allowedDice } : {}),
       ...(targetArg !== undefined || dcArg !== undefined ? { target: targetArg ?? dcArg } : {}),
       rollKind,
+      ...(typeof args.actionType === "string" && ["attack", "damage", "check", "reaction"].includes(args.actionType) ? { actionType: args.actionType as "attack" | "damage" | "check" | "reaction" } : {}),
+      ...(args.materialTarget === false ? { materialTarget: false } : {}),
+      ...(args.advantage === true ? { advantage: true } : {}),
     });
     return {
       state: next,
@@ -525,6 +537,22 @@ export function executeGmTool(
         pendingRoll: next.pendingRoll,
       },
     };
+    } catch (error) { return { state, result: { ok: false, error: error instanceof Error ? error.message : "Não foi possível preparar a rolagem." } }; }
+  }
+
+  if (name === "character_expansion_transformation_set") return setExpansionTransformation(state, String(args.transformation || ""), args.active === true);
+  if (name === "character_expansion_transformation_action") {
+    if (["survive", "accept-death", "divinity-stress", "divinity-fear"].includes(String(args.action))) return { state, result: { ok: false, error: "Cadáver e O Peso da Divindade são escolhas exclusivas do jogador na interface." } };
+    return expansionTransformationAction(state, String(args.transformation || ""), String(args.action || ""), args);
+  }
+  if (name === "character_receive_damage") {
+    const amount = Number(args.amount);
+    const damageType = String(args.damageType || "");
+    if (!Number.isFinite(amount) || amount < 0 || !["physical", "magic"].includes(damageType)) return { state, result: { ok: false, error: "Informe dano bruto não negativo e tipo physical ou magic." } };
+    const damage = expansionDamage(state.character, amount, damageType, args.useArmor === true);
+    let next = damage.armorSpent ? executeCommand(state, { type: "adjust", resource: "armor", amount: damage.armorSpent }, "gm-ai") : state;
+    next = executeCommand(next, { type: "adjust", resource: "hp", amount: damage.hpMarked }, "gm-ai");
+    return { state: next, result: { ok: true, ...damage, character: next.character } };
   }
 
   if (name === "character_adjust_resource") {
@@ -533,17 +561,20 @@ export function executeGmTool(
     if (!["hp", "hope", "stress", "armor"].includes(String(resource)) || !Number.isFinite(amount)) {
       return { state, result: { ok: false, error: "Invalid resource adjustment." } };
     }
+    if (resource === "hp" && amount < 0 && !expansionCanHeal(state.character, String(args.healingSource || "other"), args.freshRemains === true)) return { state, result: { ok: false, error: "Reanimado só recupera PV por ação de repouso com restos frescos ou Arriscar Tudo." } };
     const next = executeCommand(
       state,
-      { type: "adjust", resource: resource as "hp" | "hope" | "stress" | "armor", amount },
+      { type: "adjust", resource: resource as "hp" | "hope" | "stress" | "armor", amount, healingSource: args.healingSource === "rest" ? "rest" : args.healingSource === "risk" ? "risk" : "other", freshRemains: args.freshRemains === true },
       "gm-ai",
     );
     return { state: next, result: { ok: true, character: next.character } };
   }
 
   if (name === "character_long_rest") {
-    return changeLongRest(state, String(args.phase || ""), typeof args.restId === "string" ? args.restId : undefined);
+    return changeLongRest(state, String(args.phase || ""), typeof args.restId === "string" ? args.restId : undefined, args.availableRestMoves === undefined ? 2 : Number(args.availableRestMoves));
   }
+
+  if (name === "character_rest_move_spend") return spendLongRestMove(state, String(args.restId || ""));
 
   if (name === "character_ability_use") {
     return useRestAbility(state, String(args.abilityId || ""));
@@ -711,7 +742,7 @@ export function executeGmTool(
       return target > before && target <= time.campaignMinute;
     });
     return {
-      state: { ...state, time },
+      state: clearWolfOpportunity({ ...state, time }),
       result: {
         ok: true,
         campaignMinute: time.campaignMinute,

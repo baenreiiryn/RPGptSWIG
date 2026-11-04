@@ -40,6 +40,9 @@ import CompendiumArt from "@/components/CompendiumArt";
 import EquipmentArt from "@/components/EquipmentArt";
 import NewCampaignWizard, { type NewCampaignResult } from "@/components/NewCampaignWizard";
 import DaggerheartLevelUpWizard from "@/components/DaggerheartLevelUpWizard";
+import ExpansionTransformationsPanel from "@/components/ExpansionTransformationsPanel";
+import DivinityChoice from "@/components/DivinityChoice";
+import { expansionState, expansionTransformationAction, permanentMarkedHp, type ExpansionTransformationKey } from "@/lib/expansionTransformations";
 import { TRAIT_LABELS, TRAIT_ORDER } from "@/lib/characterCreation/daggerheart";
 import {
   availableBeastformsForCharacter,
@@ -103,6 +106,7 @@ import {
 import { countOccupiedCraftSlots } from "@/lib/craftingUi";
 import {
   dualityFormulaFromCommand,
+  dualityAppearanceByDie,
   normalizeDiceAppearanceFonts,
   parseDiceFormula,
   rollDice,
@@ -266,19 +270,22 @@ function Resource({
   max,
   kind,
   onAdjust,
+  permanent = 0,
 }: {
   label: string;
   value: number;
   max: number;
   kind: "hp" | "hope" | "stress" | "armor";
   onAdjust: (kind: "hp" | "hope" | "stress" | "armor", amount: number) => void;
+  permanent?: number;
 }) {
   return (
     <div className="resource">
       <div className="resourceTop"><span>{label}</span><strong>{value}<em>/{max}</em></strong></div>
       <div className="ticks">
-        {Array.from({ length: max }).map((_, index) => <i className={index < value ? "filled" : ""} key={index} />)}
+        {Array.from({ length: max }).map((_, index) => <i className={index < permanent ? "permanent" : index < value ? "filled" : ""} key={index} />)}
       </div>
+      {permanent>0 && <div className="permanentHpNote">{permanent} permanente(s)</div>}
       <div className="microActions">
         <button onClick={() => onAdjust(kind, -1)} aria-label={`Diminuir ${label}`}>−</button>
         <button onClick={() => onAdjust(kind, 1)} aria-label={`Aumentar ${label}`}>+</button>
@@ -822,7 +829,7 @@ export default function OracleApp() {
   const [state, setState] = useState<GameState>(initialState);
   const [screen, setScreen] = useState<AppScreen>("home");
   const [view, setView] = useState<View>("session");
-  const [characterSheetMode, setCharacterSheetMode] = useState<"character" | "companion" | "beastforms">("character");
+  const [characterSheetMode, setCharacterSheetMode] = useState<"character" | "companion" | "beastforms" | "transformations">("character");
   const [memoryMode, setMemoryMode] = useState<"timeline" | "details">("timeline");
   const [input, setInput] = useState("");
   const [ready, setReady] = useState(false);
@@ -1074,14 +1081,17 @@ export default function OracleApp() {
   const showingCompanionSheet = Boolean(animalCompanion && characterSheetMode === "companion");
   const hasBeastform = state.campaign.system === "Daggerheart" && canUseBeastform(state.character);
   const showingBeastformSheet = hasBeastform && characterSheetMode === "beastforms";
-  const showingCharacterSheet = !showingCompanionSheet && !showingBeastformSheet;
+  const hasExpansionSheet = state.campaign.system === "Daggerheart";
+  const showingExpansionSheet = hasExpansionSheet && characterSheetMode === "transformations";
+  const showingCharacterSheet = !showingCompanionSheet && !showingBeastformSheet && !showingExpansionSheet;
   const beastformTier = daggerheartTierForLevel(state.character.level);
   const availableBeastforms = hasBeastform ? availableBeastformsForCharacter(state.character, daggerheartCompendium.entries) : [];
   const deathBlocksActions = Boolean(
     state.character.conditions.includes("Inconsciente")
-    || ["choice", "avoiding", "risking", "risk-recovery", "dead"].includes(state.character.death?.status || ""),
+    || ["choice", "avoiding", "risking", "risk-recovery", "reanimated-choice", "dead"].includes(state.character.death?.status || ""),
   );
-  const playerActionsBlocked = deathBlocksActions || Boolean(state.pendingLevelUp);
+  const divinityChoicePending = Boolean(expansionState(state.character, "demigod")?.divinityPendingRollIds?.length);
+  const playerActionsBlocked = deathBlocksActions || Boolean(state.pendingLevelUp) || divinityChoicePending;
   const sceneImageErrorInfo = useMemo(
     () => sceneImageError ? describeSceneWebImageError(sceneImageError) : null,
     [sceneImageError],
@@ -1809,6 +1819,23 @@ export default function OracleApp() {
     setState(next);
   }
 
+  function useExpansionTransformation(key: ExpansionTransformationKey, action: string, args: Record<string, unknown> = {}) {
+    if (gmBusy || gmRunningRef.current || activeDiceRoll) return;
+    const current = stateRef.current;
+    const outcome = expansionTransformationAction(current, key, action, args);
+    if (!outcome.result.ok) {
+      setGmError("error" in outcome.result ? String(outcome.result.error) : "Não foi possível usar esta transformação.");
+      return;
+    }
+    stateRef.current = outcome.state;
+    setState(outcome.state);
+    setGmError("");
+    if (outcome.state.pendingRoll && !current.pendingRoll) { setView("session"); setShowDiceTray(true); }
+    else if (["divinity-stress", "divinity-fear"].includes(action) && !outcome.state.pendingRoll && (!outcome.state.character.death || outcome.state.character.death.status === "resolved") && !expansionState(outcome.state.character, "demigod")?.divinityPendingRollIds?.length) {
+      void runGmNarration(outcome.state, `O jogador resolveu O Peso da Divindade: ${action === "divinity-stress" ? "marcou 1 Fadiga" : "concedeu 1 Medo adicional ao mestre"}. O custo já foi aplicado e registrado pelo motor. Continue a cena após a rolagem anterior.`, true);
+    }
+  }
+
   function updateDiceAppearances(next: DiceAppearanceOverrides) {
     const normalized = normalizeDiceAppearanceFonts(next);
     setDiceAppearances(normalized);
@@ -1862,24 +1889,7 @@ export default function OracleApp() {
       const useDuality = duality || current.pendingRoll?.rollKind === "duality";
       let appearanceByDie: DiceAppearanceRole[] | undefined;
       if (useDuality) {
-        const positiveD12Count = parsed.terms
-          .filter((term) => term.sign > 0 && term.sides === 12)
-          .reduce((total, term) => total + term.count, 0);
-        if (positiveD12Count !== 2) {
-          throw new Error("Uma rolagem de Dualidade precisa conter exatamente 2d12: um de Esperança e um de Medo.");
-        }
-        appearanceByDie = [];
-        let d12Index = 0;
-        for (const term of parsed.terms) {
-          for (let die = 0; die < term.count; die += 1) {
-            if (term.sides === 12 && term.sign > 0 && d12Index < 2) {
-              appearanceByDie.push(d12Index === 0 ? "hope" : "fear");
-              d12Index += 1;
-            } else {
-              appearanceByDie.push("normal");
-            }
-          }
-        }
+        appearanceByDie = dualityAppearanceByDie(parsed, current.pendingRoll?.dualityFearSides || 12);
       }
       const result = rollDice(parsed, { appearanceByDie });
       diceRollSourcesRef.current.set(result.id, source);
@@ -1980,6 +1990,7 @@ export default function OracleApp() {
           const resolvedCraft = resolveCraftAttempt(current.crafting, current.inventory, recipe, {
             system: craftSystem,
             dice: craftDice,
+            modifier: result.total - craftDice.reduce((sum, value) => sum + value, 0) - craftLevelForXp(current.crafting.progress[recipe.discipline].xp),
           });
           const crafting = resolvedCraft.success
             ? resolvedCraft.crafting
@@ -1999,6 +2010,7 @@ export default function OracleApp() {
     setState(withMessage);
     if (visualError) setDiceNote("A animação 3D falhou, mas o resultado foi enviado ao Mestre.");
 
+    if (expansionState(withMessage.character, "demigod")?.divinityPendingRollIds?.length) return;
     const latestRoll = withMessage.rollHistory?.at(-1);
     const outcome = latestRoll?.outcome === "success"
       ? "SUCESSO"
@@ -2895,7 +2907,7 @@ export default function OracleApp() {
                     ))}
                   </div>
                 )}
-                {state.character.death?.status === "choice" && (
+                {!divinityChoicePending && state.character.death?.status === "choice" && (
                   <div className="deathMovePrompt" role="dialog" aria-modal="true" aria-label="Movimento de morte">
                     <small>MOVIMENTO DE MORTE</small>
                     <h2>Seu último Ponto de Vida foi marcado.</h2>
@@ -2916,17 +2928,28 @@ export default function OracleApp() {
                     </div>
                   </div>
                 )}
-                {state.character.death?.status === "risk-recovery" && (
+                {!divinityChoicePending && state.character.death?.status === "reanimated-choice" && (
+                  <div className="deathMovePrompt" role="dialog" aria-modal="true" aria-label="Cadáver do Reanimado">
+                    <small>REANIMADO · CADÁVER</small><h2>Usar Cadáver para sobreviver?</h2>
+                    <p>Marque permanentemente 1 PV para transformar esta falha de Arriscar Tudo em sucesso. Depois, distribua {state.character.death.recoveryPoints || 0} pontos de recuperação.</p>
+                    <div className="deathMoveChoices">
+                      <button type="button" onClick={() => useExpansionTransformation("reanimated", "survive")}>Marcar 1 PV permanente e sobreviver</button>
+                      <button type="button" onClick={() => useExpansionTransformation("reanimated", "accept-death")}>Aceitar a morte</button>
+                    </div>
+                  </div>
+                )}
+                {!divinityChoicePending && state.character.death?.status === "risk-recovery" && (
                   <div className="deathMovePrompt recovery" role="dialog" aria-modal="true" aria-label="Recuperação de Arriscar Tudo">
                     <small>ARRISCAR TUDO · ESPERANÇA</small>
                     <h2>Distribua {state.character.death.recoveryPoints || 0} ponto(s) de recuperação.</h2>
                     <p>Escolha, ponto a ponto, entre limpar PV marcado ou Fadiga.</p>
                     <div className="riskRecoveryChoices">
-                      <button type="button" disabled={state.character.hp <= 0} onClick={() => spendRiskRecovery("hp")}>−1 PV marcado <b>{state.character.hp}/{state.character.maxHp}</b></button>
+                      <button type="button" disabled={state.character.hp <= permanentMarkedHp(state.character)} onClick={() => spendRiskRecovery("hp")}>−1 PV marcado <b>{state.character.hp}/{state.character.maxHp}</b></button>
                       <button type="button" disabled={state.character.stress <= 0} onClick={() => spendRiskRecovery("stress")}>−1 Fadiga <b>{state.character.stress}/{state.character.maxStress}</b></button>
                     </div>
                   </div>
                 )}
+                <DivinityChoice state={state} disabled={gmBusy || Boolean(activeDiceRoll)} onChoose={(action, args) => useExpansionTransformation("demigod", action, args)} />
                 <form className="composer" onSubmit={submit}>
                   <ActionComposer
                     value={input}
@@ -2939,7 +2962,7 @@ export default function OracleApp() {
                         ? "A jornada deste personagem terminou."
                         : state.character.conditions.includes("Inconsciente")
                           ? "Seu personagem está inconsciente."
-                          : ["choice", "avoiding", "risking", "risk-recovery"].includes(state.character.death?.status || "")
+                          : ["choice", "avoiding", "risking", "risk-recovery", "reanimated-choice"].includes(state.character.death?.status || "")
                             ? "Resolva o movimento de morte antes de agir."
                             : !hasGmNarration
                               ? "Aguardando a primeira cena do Mestre..."
@@ -2962,7 +2985,7 @@ export default function OracleApp() {
                   <button>•••</button>
                 </div>
                 <div className="resourceGrid">
-                  <Resource label="Pontos de Vida" value={state.character.hp} max={state.character.maxHp} kind="hp" onAdjust={adjust} />
+                  <Resource label="Pontos de Vida" value={state.character.hp} max={state.character.maxHp} permanent={permanentMarkedHp(state.character)} kind="hp" onAdjust={adjust} />
                   <Resource label="Esperança" value={state.character.hope} max={state.character.maxHope} kind="hope" onAdjust={adjust} />
                   <Resource label={state.campaign.system === "Daggerheart" ? "Fadiga" : "Estresse"} value={state.character.stress} max={state.character.maxStress} kind="stress" onAdjust={adjust} />
                   <Resource label="Armadura" value={state.character.armor} max={state.character.maxArmor} kind="armor" onAdjust={adjust} />
@@ -2997,7 +3020,7 @@ export default function OracleApp() {
 
           {view === "character" && (
             <section className="widePanel panel">
-              {animalCompanion || hasBeastform ? (
+              {animalCompanion || hasBeastform || hasExpansionSheet ? (
                 <div className="characterSheetTabs" role="tablist" aria-label="Ficha ativa" onKeyDown={(event) => {
                   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
                   const tabs = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('button[role="tab"]')];
@@ -3042,6 +3065,9 @@ export default function OracleApp() {
                       className={showingBeastformSheet ? "active" : ""}
                       onClick={() => setCharacterSheetMode("beastforms")}
                     >Formas de Fera</button>
+                  )}
+                  {hasExpansionSheet && (
+                    <button type="button" role="tab" id="expansion-transformations-tab" aria-controls="expansion-transformations-panel" aria-selected={showingExpansionSheet} tabIndex={showingExpansionSheet ? 0 : -1} className={showingExpansionSheet ? "active" : ""} onClick={() => setCharacterSheetMode("transformations")}>Transformações</button>
                   )}
                 </div>
               ) : <div className="eyebrow">PERSONAGEM</div>}
@@ -3136,8 +3162,13 @@ export default function OracleApp() {
                   {!availableBeastforms.length && <p className="beastformSheetHint">Nenhuma forma disponível para este patamar.</p>}
                 </div>
               )}
+              {showingExpansionSheet && (
+                <div id="expansion-transformations-panel" role="tabpanel" aria-labelledby="expansion-transformations-tab">
+                  <ExpansionTransformationsPanel state={state} disabled={gmBusy || Boolean(activeDiceRoll)} onAction={useExpansionTransformation} />
+                </div>
+              )}
               {showingCharacterSheet && (
-                <div id="character-sheet-panel" role={animalCompanion || hasBeastform ? "tabpanel" : undefined} aria-labelledby={animalCompanion || hasBeastform ? "character-sheet-tab" : undefined}>
+                <div id="character-sheet-panel" role={animalCompanion || hasBeastform || hasExpansionSheet ? "tabpanel" : undefined} aria-labelledby={animalCompanion || hasBeastform || hasExpansionSheet ? "character-sheet-tab" : undefined}>
               <div className="profileTop">
                 {state.character.daggerheart?.image ? (
                   <img
@@ -3168,7 +3199,7 @@ export default function OracleApp() {
                 </div>
               )}
               <div className="fourCols">
-                <Resource label="PV marcados" value={state.character.hp} max={state.character.maxHp} kind="hp" onAdjust={adjust} />
+                  <Resource label="PV marcados" value={state.character.hp} max={state.character.maxHp} permanent={permanentMarkedHp(state.character)} kind="hp" onAdjust={adjust} />
                 <Resource label="Esperança" value={state.character.hope} max={state.character.maxHope} kind="hope" onAdjust={adjust} />
                 <Resource label={state.campaign.system === "Daggerheart" ? "Fadiga" : "Estresse"} value={state.character.stress} max={state.character.maxStress} kind="stress" onAdjust={adjust} />
                 <Resource label="Armadura" value={state.character.armor} max={state.character.maxArmor} kind="armor" onAdjust={adjust} />

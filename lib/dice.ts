@@ -243,6 +243,19 @@ export function dualityFormulaFromCommand(input: string) {
   return /^\/dr$/i.test(input.trim()) ? "2d12" : null;
 }
 
+export function dualityAppearanceByDie(parsed: ParsedDiceFormula, fearSides: 12 | 20 = 12): DiceAppearanceRole[] {
+  const positive = (sides: number) => parsed.terms.filter(term => term.sign > 0 && term.sides === sides).reduce((sum, term) => sum + term.count, 0);
+  if ((fearSides === 12 && positive(12) !== 2) || (fearSides === 20 && (positive(12) !== 1 || positive(20) < 1))) {
+    throw new Error(fearSides === 20 ? "Este ataque exige 1d12 de Esperança e 1d20 de Medo." : "Uma rolagem de Dualidade precisa conter exatamente 2d12: um de Esperança e um de Medo.");
+  }
+  let hope = false, fear = false;
+  return parsed.terms.flatMap(term => Array.from({ length: term.count }, (): DiceAppearanceRole => {
+    if (term.sign > 0 && term.sides === 12 && !hope) { hope = true; return "hope"; }
+    if (term.sign > 0 && term.sides === fearSides && !fear) { fear = true; return "fear"; }
+    return "normal";
+  }));
+}
+
 function randomDieValue(sides: DieSides, random?: () => number) {
   if (random) {
     const value = random();

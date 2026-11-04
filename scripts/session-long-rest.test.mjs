@@ -150,3 +150,12 @@ test('a failed GM response resumes the same rest without repeating expiration or
  assert.equal(resumed.state.character.daggerheart.restCycle.active,undefined);
  assert.equal(resumed.state.character.hope,3);
 });
+
+test('rest moves share a bounded balance and extra moves require the declared benefit total',()=>{
+ const begun=call(bard(),'character_long_rest',{phase:'start',reason:'Descanso longo',availableRestMoves:3});
+ assert.equal(begun.result.ok,true);let state=begun.state;
+ for(let i=0;i<3;i++){const spent=call(state,'character_rest_move_spend',{restId:begun.result.restId,reason:'Uma escolha de repouso'});assert.equal(spent.result.ok,true);state=spent.state;}
+ assert.equal(call(state,'character_rest_move_spend',{restId:begun.result.restId,reason:'Sem ações restantes'}).result.ok,false);
+ assert.equal(call(state,'character_rest_move_spend',{restId:'outro-descanso',reason:'Identificador incorreto'}).result.ok,false);
+ assert.equal(call(bard(),'character_long_rest',{phase:'start',reason:'Total inválido',availableRestMoves:0}).result.ok,false);
+});

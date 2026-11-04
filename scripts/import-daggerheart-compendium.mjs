@@ -1195,6 +1195,31 @@ for (const [key, value] of Object.entries(config.DeathMoves || {})) {
 
 entries.unshift(...rules);
 
+const transformationTranslations = new Map(loadEntries("daggerheart-expansion-content.transformations.json"));
+const transformationFamilies = [
+  ["Werewolf", "Lobisomem", "werewolf", ["Wolf Form", "Frenzy"]],
+  ["Vampire", "Vampiro", "vampire", ["Fangs", "Feed"]],
+  ["Ghost", "Fantasma", "ghost", ["Spirit Form", "Ephemeral"]],
+  ["Reanimated", "Reanimado", "reanimated", ["Corpse", "Stitch Up"]],
+  ["Shapeshifter", "Metamorfo", "shapeshifter", ["Change Shape", "Only Skin Deep"]],
+  ["Demigod", "Semi-Deus", "demigod", ["Ichor of the Gods", "Weight of Divinity"]],
+];
+for (const [key, name, transformationKey, features] of transformationFamilies) {
+  const descriptions = features.map(feature => {
+    const data = transformationTranslations.get(feature);
+    if (!data?.description) throw new Error(`Missing expansion transformation feature: ${feature}`);
+    const entry = makeEntry({ key: feature, data, type: "transformationFeature", category: "transformations", source: "expansion", parent: key });
+    entry.transformationKey = transformationKey;
+    entry.art = `/compendium/daggerheart/transformations/${transformationKey}.webp`;
+    entries.push(entry);
+    return `${cleanText(data.name)}\n${cleanText(data.description)}`;
+  });
+  const parent = makeEntry({ key, data: { name, description: descriptions.join("\n\n") }, type: "transformation", category: "transformations", source: "expansion" });
+  parent.transformationKey = transformationKey;
+  parent.art = `/compendium/daggerheart/transformations/${transformationKey}.webp`;
+  entries.push(parent);
+}
+
 const categories = [
   { id: "rules", name: "Regras", icon: "◇", description: "Mecânicas essenciais e referência rápida" },
   { id: "classes", name: "Classes", icon: "✦", description: "Classes e características de classe" },
@@ -1202,12 +1227,14 @@ const categories = [
   { id: "communities", name: "Comunidades", icon: "⌂", description: "Origens culturais e características" },
   { id: "subclasses", name: "Subclasses", icon: "△", description: "Caminhos e características de subclasse" },
   { id: "beastforms", name: "Formas de Fera", icon: "♧", description: "Formas do Druida, atributos, ataques e habilidades por patamar" },
+  { id: "transformations", name: "Transformações", icon: "◭", description: "Lobisomem, Vampiro, Fantasma, Reanimado, Metamorfo e Semi-Deus da expansão" },
   { id: "domains", name: "Domínios", icon: "◈", description: "Cartas, feitiços e habilidades de domínio" },
   { id: "equipment", name: "Equipamentos", icon: "⚔", description: "Armas, armaduras, consumíveis e itens de saque" },
   { id: "adversaries", name: "Adversários", icon: "♜", description: "Criaturas e oponentes para o Mestre" },
 ];
 
 const featureParentTypes = {
+  transformationFeature: "transformation",
   classFeature: "class",
   ancestryFeature: "ancestry",
   communityFeature: "community",

@@ -33,6 +33,8 @@ const TYPE_ORDER: Record<string, number> = {
   communityFeature: 1,
   subclassFeature: 1,
   domainCard: 0,
+  transformation: 0,
+  transformationFeature: 1,
   weapon: 0,
   armor: 1,
   consumable: 2,

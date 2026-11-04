@@ -41,6 +41,7 @@ export type CompendiumEntry = {
   artLicense?: string;
   motivesAndTactics?: string;
   sessionRest?: SessionRestRule;
+  transformationKey?: "werewolf" | "vampire" | "ghost" | "reanimated" | "shapeshifter" | "demigod";
 };
 
 export type SubclassFeatureTier = NonNullable<CompendiumEntry["tier"]>;
@@ -85,6 +86,8 @@ export function entryTypeLabel(type: string) {
     subclassFeature: "Característica de subclasse",
     domainCard: "Carta de domínio",
     beastform: "Forma de Fera",
+    transformation: "Transformação",
+    transformationFeature: "Característica de transformação",
     weapon: "Arma",
     armor: "Armadura",
     consumable: "Consumível",

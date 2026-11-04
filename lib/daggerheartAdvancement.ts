@@ -8,6 +8,7 @@ import type {
   GameState,
   InventoryItem,
 } from "@/lib/game";
+import { reconcileExpansionCharacter } from "@/lib/expansionTransformations";
 import {
   daggerheartTierForLevel,
   initialTrackersForCharacter,
@@ -873,7 +874,7 @@ export function applyDaggerheartLevelUpPlan(
     if (!applied.ok) return { ok: false, character: current, failedAtIndex: index, errors: applied.errors };
     current = applied.character;
   }
-  return { ok: true, character: current };
+  return { ok: true, character: reconcileExpansionCharacter(current) };
 }
 
 function randomId(prefix: string) {

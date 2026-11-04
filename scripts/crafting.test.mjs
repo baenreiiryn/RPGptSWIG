@@ -342,6 +342,16 @@ test("failed craft consumes nothing, grants no XP, and unlocks the attempt for r
   assert.equal(result.crafting.pendingAttempt.stage, "review");
 });
 
+test("conditional dice modifiers such as vampire hunger affect crafting without canceling duality criticals", () => {
+  const known = recipe();
+  let state = learnCraftRecipe(createInitialCraftingState(), known).crafting;
+  const inventory = [item({ qty: 2 })];
+  state = beginCraftAttempt(state, inventory, { id: "hunger-craft", discipline: "mundane", ingredients: [ingredient()], recipeId: known.id, requestedAt: at }).crafting;
+  state = buildCraftRollPlan(state, inventory, known.id, "daggerheart").crafting;
+  assert.equal(resolveCraftAttempt(state, inventory, known, { system: "daggerheart", dice: [8, 9], modifier: -6 }).success, false);
+  assert.equal(resolveCraftAttempt(state, inventory, known, { system: "daggerheart", dice: [8, 8], modifier: -6 }).critical, true);
+});
+
 test("successful craft revalidates, consumes atomically, stacks a compatible result, and awards XP", () => {
   const known = recipe();
   let state = learnCraftRecipe(createInitialCraftingState(), known).crafting;

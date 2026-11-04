@@ -1,11 +1,12 @@
 import type { CharacterTracker, GameState } from "@/lib/game";
 import raw from "./compendium/daggerheart.generated.json" with { type: "json" };
 import { applySessionRestRule, sessionRuleText, type SessionRestRule } from "./sessionRestRules";
+import { afterExpansionResourceChange, gainExpansionHope, onExpansionLongRestCompleted } from "./expansionTransformations";
 
 export type RestCycle = {
   completed: number;
   used: Record<string, number>;
-  active?: { id: string; startedAtCampaignMinute: number };
+  active?: { id: string; startedAtCampaignMinute: number; restMovesSpent?: number; availableRestMoves?: number };
   lastCompletedId?: string;
   recoveryRollIds?: string[];
   priorRollIds?: Record<string, string[]>;
@@ -96,11 +97,20 @@ export function refreshRestAbility(state: GameState, abilityId: string, rollId: 
   return { state: next, result: { ok: true, ability: { ...ability, used: ability.used - 1, remaining: ability.remaining + 1 } } };
 }
 
-export function changeLongRest(state: GameState, phase: string, restId?: string) {
+export function spendLongRestMove(state: GameState, restId: string) {
+  const active = state.character.daggerheart?.restCycle?.active;
+  if (!active || active.id !== restId || (active.restMovesSpent || 0) >= (active.availableRestMoves ?? 2)) return { state, result: { ok: false, error: "Não há ação de repouso disponível neste descanso." } };
+  const next = structuredClone(state);
+  next.character.daggerheart!.restCycle!.active!.restMovesSpent = (active.restMovesSpent || 0) + 1;
+  return { state: next, result: { ok: true, restMovesSpent: next.character.daggerheart!.restCycle!.active!.restMovesSpent } };
+}
+
+export function changeLongRest(state: GameState, phase: string, restId?: string, availableRestMoves = 2) {
   if (state.campaign.system !== "Daggerheart" || !state.character.daggerheart || !["start", "finish", "interrupt"].includes(phase)) {
     return { state, result: { ok: false, error: "Descanso longo inválido para este personagem." } };
   }
   const cycle = restCycleFor(state);
+  if (phase === "start" && (!Number.isSafeInteger(availableRestMoves) || availableRestMoves < 1)) return { state, result: { ok: false, error: "Informe uma quantidade válida de ações de repouso." } };
   if (phase === "start" && cycle.active) return { state, result: { ok: true, unchanged: true, restId: cycle.active.id } };
   if (phase === "finish" && restId && restId === cycle.lastCompletedId) return { state, result: { ok: true, unchanged: true, restId } };
   if (phase !== "start" && (!restId || cycle.active?.id !== restId)) return { state, result: { ok: false, error: "Informe o restId do descanso longo em andamento." } };
@@ -109,7 +119,7 @@ export function changeLongRest(state: GameState, phase: string, restId?: string)
   data.restCycle = structuredClone(cycle);
   const expired: string[] = [];
   if (phase === "start") {
-    data.restCycle.active = { id: globalThis.crypto.randomUUID(), startedAtCampaignMinute: next.time.campaignMinute };
+    data.restCycle.active = { id: globalThis.crypto.randomUUID(), startedAtCampaignMinute: next.time.campaignMinute, restMovesSpent: 0, availableRestMoves };
     for (const tracker of data.trackers || []) {
       const rule = trackerRule(tracker);
       const expires = tracker.id === "bard-rally" || rule?.expiresAt === "longRestStart"
@@ -117,7 +127,7 @@ export function changeLongRest(state: GameState, phase: string, restId?: string)
       if (!expires) continue;
       if (trackerRule(tracker) && entries.find(entry => matches(entry, tracker.source.id))?.sourceId === "Slayer") {
         const count = tracker.kind === "dicePool" ? (tracker.dice || []).filter(value => value > 0).length : tracker.value;
-        next.character.hope = Math.min(next.character.maxHope, next.character.hope + count);
+        gainExpansionHope(next.character, count);
       }
       tracker.value = 0; tracker.active = false;
       if (tracker.kind === "dicePool") tracker.dice = [];
@@ -130,15 +140,17 @@ export function changeLongRest(state: GameState, phase: string, restId?: string)
     data.restCycle.lastCompletedId = restId;
     delete data.restCycle.active;
     const luck = ownedRestAbilities(next).some(entry => entry.sourceId === "Luckbringer");
-    if (luck) next.character.hope = Math.min(next.character.maxHope, next.character.hope + 1);
+    if (luck) gainExpansionHope(next.character, 1);
+    onExpansionLongRestCompleted(next);
   } else delete data.restCycle.active;
+  afterExpansionResourceChange(next, "stress", state.character.stress);
   const refreshRequired = phase === "finish" ? ownedRestAbilities(next).filter(entry => entry.sessionRest?.initializesAt === "longRestEnd" && entry.sourceId !== "Luckbringer") : [];
   return { state: next, result: {
     ok: true, phase, restId: phase === "start" ? data.restCycle.active!.id : restId,
     expired, abilityUses: restAbilityAvailability(next), refreshRequired,
     automaticallyApplied: [
       ...(phase === "start" ? ["Recursos dos trackers em expired foram descartados; Dados de Matança já concederam a Esperança correspondente."] : []),
-      ...(phase === "finish" && ownedRestAbilities(next).some(entry => entry.sourceId === "Luckbringer") ? ["Talismã da Sorte já concedeu 1 Esperança ao personagem do jogador."] : []),
+      ...(phase === "finish" && ownedRestAbilities(next).some(entry => entry.sourceId === "Luckbringer") ? ["Talismã da Sorte já foi aplicado ao personagem do jogador, respeitando a conversão de Esperança em Fadiga na Forma Lupina."] : []),
     ],
     expiredAbilities: phase === "start" ? ownedRestAbilities(next).filter(entry => entry.sessionRest?.expiresAt === "longRestStart") : [],
     groupEffects: phase === "finish" && ownedRestAbilities(next).some(entry => entry.sourceId === "Luckbringer") ? ["Talismã da Sorte: os demais membros do grupo recebem 1 Esperança."] : [],

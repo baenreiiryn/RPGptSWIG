@@ -6,6 +6,7 @@ import {
 import type { CampaignTimeState } from "@/lib/campaignTime";
 import { trackRestAbilityActivation, type RestCycle } from "@/lib/longRest";
 import { sessionRuleText } from "@/lib/sessionRestRules";
+import { afterExpansionResourceChange, expansionCanHeal, expansionState, finishExpansionRoll, permanentMarkedHp, prepareExpansionRoll, reconcileExpansionCharacter, type ExpansionTransformation } from "@/lib/expansionTransformations";
 import {
   createInitialCraftingState,
   ensureCraftingState,
@@ -51,6 +52,11 @@ export type PlayerRollRequest = {
   target?: number;
   rollKind?: RollKind;
   purpose?: "death-avoid" | "death-risk" | string;
+  actionType?: "attack" | "damage" | "check" | "reaction";
+  dualityFearSides?: 12 | 20;
+  materialTarget?: boolean;
+  advantage?: boolean;
+  expansionApplied?: boolean;
 };
 
 export type PendingPlayerRoll = PlayerRollRequest & {
@@ -76,6 +82,7 @@ export type RollResultRecord = {
   label: string;
   reason: string;
   rollKind: RollKind;
+  purpose?: string;
   source: RollSource;
   requestedFormula?: string;
   formula?: string;
@@ -186,7 +193,7 @@ export type CharacterTransformation = {
 };
 
 export type CharacterDeathState = {
-  status: "choice" | "avoiding" | "risking" | "risk-recovery" | "last-glory" | "resolved" | "dead";
+  status: "choice" | "avoiding" | "risking" | "risk-recovery" | "reanimated-choice" | "last-glory" | "resolved" | "dead";
   move?: "avoid" | "glory" | "risk";
   recoveryPoints?: number;
   resolvedAt?: string;
@@ -226,6 +233,7 @@ export type DaggerheartCharacterData = {
   trackers?: CharacterTracker[];
   transformation?: CharacterTransformation;
   restCycle?: RestCycle;
+  expansionTransformations?: ExpansionTransformation[];
 };
 
 export type Quest = {
@@ -372,6 +380,7 @@ export type CharacterState = {
   maxArmor: number;
   conditions: string[];
   scars?: number;
+  permanentHp?: number;
   death?: CharacterDeathState;
   appearance?: string;
   daggerheart?: DaggerheartCharacterData;
@@ -482,7 +491,7 @@ export function ensureGameStateCharacterModel(state: GameState): GameState {
   const progression = state.character.daggerheart
     ? ensureDaggerheartProgressionState(state.character.progression)
     : state.character.progression;
-  const character: CharacterState = {
+  let character: CharacterState = {
     ...state.character,
     level,
     tier: daggerheartTierForLevel(level),
@@ -539,6 +548,8 @@ export function ensureGameStateCharacterModel(state: GameState): GameState {
   if (character.daggerheart && trackers !== currentTrackers) {
     character.daggerheart = { ...character.daggerheart, trackers };
   }
+  character = reconcileExpansionCharacter(character);
+  character.hp = Math.max(permanentMarkedHp(character), character.hp);
   const death = character.hp >= character.maxHp && character.death?.status !== "dead" && character.death?.status !== "resolved"
     ? character.death || { status: "choice" as const }
     : character.death;
@@ -547,6 +558,7 @@ export function ensureGameStateCharacterModel(state: GameState): GameState {
     || state.resourceModelVersion !== RESOURCE_MODEL_VERSION
     || level !== state.character.level
     || character.tier !== state.character.tier
+    || character.hp !== state.character.hp
     || character.evasion !== state.character.evasion
     || character.damageThresholds !== state.character.damageThresholds
     || character.proficiency !== state.character.proficiency
@@ -555,6 +567,7 @@ export function ensureGameStateCharacterModel(state: GameState): GameState {
     || inventory !== state.inventory
     || character.daggerheart !== state.character.daggerheart
     || character.death !== state.character.death
+    || character.permanentHp !== state.character.permanentHp
     || campaign !== state.campaign;
   return changed ? { ...state, resourceModelVersion: RESOURCE_MODEL_VERSION, campaign, character, inventory } : state;
 }
@@ -682,11 +695,13 @@ export function inferLegacyRestartSnapshot(state: GameState): CampaignRestartSna
   character.maxArmor = state.character.maxArmor;
   character.conditions = [];
   character.scars = 0;
+  character.permanentHp = 0;
   character.death = undefined;
   character.progression = undefined;
   if (character.daggerheart) {
     character.daggerheart.transformation = undefined;
     character.daggerheart.restCycle = undefined;
+    character.daggerheart.expansionTransformations = undefined;
     character.daggerheart.trackers = initialTrackersForCharacter(sourceClass, 1, sourceSubclass);
     if (character.daggerheart.animalCompanion) {
       character.daggerheart.animalCompanion.stress = 0;
@@ -747,7 +762,7 @@ export function restartCampaignFromSnapshot(state: GameState): GameState {
 }
 
 export type GameCommand =
-  | { type: "adjust"; resource: "hp" | "hope" | "stress" | "armor"; amount: number }
+  | { type: "adjust"; resource: "hp" | "hope" | "stress" | "armor"; amount: number; healingSource?: "rest" | "risk" | "other"; freshRemains?: boolean }
   | { type: "tracker"; trackerId: string; value: number; mode?: "set" | "adjust"; dieIndex?: number }
   | { type: "transformation"; transformation?: CharacterTransformation }
   | { type: "inventory"; itemId: string; amount: number }
@@ -864,13 +879,15 @@ export function executeCommand(state: GameState, command: GameCommand, actor: Ac
   let reverse: GameCommand | undefined;
 
   if (command.type === "adjust") {
-    const maxKey = ({ hp: "maxHp", hope: "maxHope", stress: "maxStress", armor: "maxArmor" } as const)[command.resource];
-    const current = next.character[command.resource];
+    if (command.resource === "hp" && command.amount < 0 && !expansionCanHeal(next.character, command.healingSource, command.freshRemains)) return state;
+    const resource = command.resource === "hope" && command.amount > 0 && expansionState(next.character, "werewolf")?.wolfActive ? "stress" : command.resource;
+    const maxKey = ({ hp: "maxHp", hope: "maxHope", stress: "maxStress", armor: "maxArmor" } as const)[resource];
+    const current = next.character[resource];
     const maximum = next.character[maxKey];
-    const updated = clamp(current + command.amount, 0, maximum);
+    const updated = clamp(current + command.amount, resource === "hp" ? permanentMarkedHp(next.character) : 0, maximum);
     const actual = updated - current;
-    next.character[command.resource] = updated;
-    if (command.resource === "hp") {
+    next.character[resource] = updated;
+    if (resource === "hp") {
       label = `PV marcados ${actual >= 0 ? "+" : ""}${actual}`;
       if (updated >= maximum && next.character.death?.status !== "dead" && next.character.death?.status !== "resolved") {
         next.character.death = next.character.death || { status: "choice" };
@@ -881,9 +898,10 @@ export function executeCommand(state: GameState, command: GameCommand, actor: Ac
         next.character.conditions = next.character.conditions.filter((condition) => condition !== "Inconsciente");
       }
     } else {
-      label = `${command.resource.toUpperCase()} ${actual >= 0 ? "+" : ""}${actual}`;
+      label = `${resource.toUpperCase()} ${actual >= 0 ? "+" : ""}${actual}`;
     }
-    reverse = { ...command, amount: -actual };
+    afterExpansionResourceChange(next, resource, current);
+    reverse = { ...command, resource, amount: -actual };
   }
 
   if (command.type === "tracker") {
@@ -980,6 +998,7 @@ export function executeCommand(state: GameState, command: GameCommand, actor: Ac
         label: pending.label,
         reason: pending.reason,
         rollKind: pending.rollKind,
+        purpose: pending.purpose,
         source: command.resolution.source ?? "pending",
         requestedFormula: pending.formula,
         formula: command.resolution.formula?.trim() || pending.formula,
@@ -1011,6 +1030,9 @@ export function executeCommand(state: GameState, command: GameCommand, actor: Ac
 
 export function requestPlayerRoll(state: GameState, request: PlayerRollRequest): GameState {
   if (state.pendingRoll) return state;
+  const expansion = prepareExpansionRoll(state, request);
+  state = expansion.state;
+  request = expansion.request;
   const formula = request.formula?.trim() || undefined;
   const allowedDice = request.allowedDice?.length
     ? Array.from(new Set(request.allowedDice))
@@ -1024,6 +1046,11 @@ export function requestPlayerRoll(state: GameState, request: PlayerRollRequest):
     target: request.target,
     rollKind: request.rollKind ?? "custom",
     purpose: request.purpose,
+    actionType: request.actionType,
+    dualityFearSides: request.dualityFearSides,
+    materialTarget: request.materialTarget,
+    advantage: request.advantage,
+    expansionApplied: request.expansionApplied,
     requestedAt: now(),
     campaignMinute: state.time?.campaignMinute ?? 0,
   };
@@ -1036,6 +1063,7 @@ export function requestPlayerRoll(state: GameState, request: PlayerRollRequest):
 
 export function chooseDeathMove(state: GameState, move: "avoid" | "glory" | "risk"): GameState {
   if (state.character.hp < state.character.maxHp || state.character.death?.status === "dead") return state;
+  if (expansionState(state.character, "ghost") && move !== "glory") return state;
   const character = structuredClone(state.character);
   if (move === "glory") {
     character.death = { status: "last-glory", move: "glory" };
@@ -1083,11 +1111,13 @@ function resolveDeathRollState(state: GameState, pending: PendingPlayerRoll, res
     const fear = resolution.dice?.find((die) => die.label === "Medo")?.value;
     if (hope !== undefined && fear !== undefined) {
       if (hope === fear) {
-        next.character.hp = 0;
+        next.character.hp = permanentMarkedHp(next.character);
         next.character.stress = 0;
         next.character.death = { status: "resolved", move: "risk", resolvedAt: now() };
       } else if (hope > fear) {
         next.character.death = { status: "risk-recovery", move: "risk", recoveryPoints: hope };
+      } else if (expansionState(next.character, "reanimated") && permanentMarkedHp(next.character) < next.character.maxHp - 1) {
+        next.character.death = { status: "reanimated-choice", move: "risk", recoveryPoints: hope };
       } else {
         next.character.death = { status: "dead", move: "risk", resolvedAt: now() };
       }
@@ -1101,10 +1131,11 @@ export function spendDeathRecoveryPoint(state: GameState, resource: "hp" | "stre
   if (death?.status !== "risk-recovery" || !death.recoveryPoints || death.recoveryPoints <= 0) return state;
   const current = state.character[resource];
   const next = structuredClone(state) as GameState;
-  if (current > 0) next.character[resource] = current - 1;
-  const actuallySpent = current > 0 ? 1 : 0;
+  const floor = resource === "hp" ? permanentMarkedHp(next.character) : 0;
+  if (current > floor) next.character[resource] = current - 1;
+  const actuallySpent = current > floor ? 1 : 0;
   const remaining = Math.max(0, death.recoveryPoints - actuallySpent);
-  const noResourcesLeft = next.character.hp <= 0 && next.character.stress <= 0;
+  const noResourcesLeft = next.character.hp <= permanentMarkedHp(next.character) && next.character.stress <= 0;
   next.character.death = remaining <= 0 || noResourcesLeft
     ? { status: "resolved", move: "risk", recoveryPoints: 0, resolvedAt: now() }
     : { ...death, recoveryPoints: remaining };
@@ -1130,8 +1161,9 @@ export function resolvePendingRoll(
 ): GameState {
   const pending = state.pendingRoll;
   let next = executeCommand(state, { type: "resolve-roll", pendingRollId, resolution }, actor);
-  if (pending?.id === pendingRollId && pending.purpose?.startsWith("death-")) {
-    next = resolveDeathRollState(next, pending, resolution);
+  if (pending?.id === pendingRollId) {
+    if (pending.purpose?.startsWith("death-")) next = resolveDeathRollState(next, pending, resolution);
+    next = finishExpansionRoll(next, pending.purpose, resolution);
   }
   return next;
 }

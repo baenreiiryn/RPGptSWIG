@@ -5,6 +5,7 @@ const FAMILY_TYPES: Record<string, readonly [string, string]> = {
   ancestries: ["ancestry", "ancestryFeature"],
   communities: ["community", "communityFeature"],
   subclasses: ["subclass", "subclassFeature"],
+  transformations: ["transformation", "transformationFeature"],
 };
 
 const TIER_ORDER: Record<string, number> = { foundation: 0, specialization: 1, mastery: 2 };

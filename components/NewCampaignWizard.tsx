@@ -34,6 +34,8 @@ import DaggerheartLevelUpWizard from "@/components/DaggerheartLevelUpWizard";
 import StartingEquipmentPicker from "@/components/StartingEquipmentPicker";
 import { canChooseStartingEquipment, findEquipmentPreset, reconcileStartingLoadout, startingLoadoutInventory, suggestedStartingLoadout, type StartingLoadout } from "@/lib/startingEquipment";
 import type { CharacterState, CharacterTraitName, InventoryItem } from "@/lib/game";
+import { withStartingTransformation, type ExpansionTransformationKey } from "@/lib/expansionTransformations";
+import StartingTransformationPicker from "@/components/StartingTransformationPicker";
 
 type AiResponse = { output?: unknown[]; output_text?: unknown };
 
@@ -106,6 +108,7 @@ export type NewCampaignResult = {
     training: string[];
   };
   armorSlots: number;
+  transformation?: ExpansionTransformationKey;
   advancementPlan: DaggerheartLevelUpPlan;
   resolvedCharacter: CharacterState;
 };
@@ -250,6 +253,7 @@ export default function NewCampaignWizard({ ai, onBack, onComplete, mode = "new"
   const [mixedAncestry, setMixedAncestry] = useState(false);
   const [ancestryA, setAncestryA] = useState("");
   const [ancestryB, setAncestryB] = useState("");
+  const [transformation, setTransformation] = useState<ExpansionTransformationKey>();
   const [communityId, setCommunityId] = useState("");
 
   const [traitMode, setTraitMode] = useState<"suggested" | "manual">("suggested");
@@ -452,6 +456,7 @@ export default function NewCampaignWizard({ ai, onBack, onComplete, mode = "new"
             `Descrição da classe: ${selectedClass.description || "não disponível"}.`,
             `Subclasse: ${selectedSubclass.name}.`,
             `Descrição da subclasse: ${selectedSubclass.description || "não disponível"}.`,
+            `Transformação inicial: ${daggerheartCompendium.entries.find(entry => entry.type === "transformation" && entry.transformationKey === transformation)?.name || "nenhuma"}.`,
             `Ancestralidade: ${ancestry}.`,
             `Descrição da ancestralidade principal: ${selectedAncestryA.description || "não disponível"}.`,
             ...(mixedAncestry && selectedAncestryB
@@ -692,7 +697,7 @@ export default function NewCampaignWizard({ ai, onBack, onComplete, mode = "new"
       },
     };
     base.daggerheart!.trackers = reconcileDaggerheartAdvancementTrackers(base);
-    return base;
+    return withStartingTransformation(base, result.transformation);
   }
 
   async function finish() {
@@ -715,6 +720,7 @@ export default function NewCampaignWizard({ ai, onBack, onComplete, mode = "new"
       tone,
       adventureHook: toneId === "custom" ? adventureHook.trim() || undefined : undefined,
       system: "Daggerheart",
+      transformation,
       classEntry: selectedClass,
       subclassEntry: selectedSubclass,
       classFeatures: selectedClassFeatures,
@@ -983,6 +989,8 @@ export default function NewCampaignWizard({ ai, onBack, onComplete, mode = "new"
             </div>
           )}
 
+          {step === 2 && <StartingTransformationPicker value={transformation} onChange={setTransformation} />}
+
           {step === 3 && (
             <div className="campaignWizardStep">
               <div className="campaignWizardIntro"><small>PASSO 4</small><h1>Quem ensinou você a viver?</h1><p>Sua comunidade representa a cultura e o ambiente que moldaram sua forma de encarar o mundo.</p></div>
@@ -1220,6 +1228,7 @@ export default function NewCampaignWizard({ ai, onBack, onComplete, mode = "new"
           <dl>
             <div><dt>Tom</dt><dd>{toneName}</dd></div>
             <div><dt>Ancestralidade</dt><dd>{selectedAncestryA ? `${selectedAncestryA.name}${mixedAncestry && selectedAncestryB ? ` + ${selectedAncestryB.name}` : ""}` : "—"}</dd></div>
+            <div><dt>Transformação</dt><dd>{daggerheartCompendium.entries.find(entry => entry.type === "transformation" && entry.transformationKey === transformation)?.name || "Nenhuma"}</dd></div>
             <div><dt>Comunidade</dt><dd>{selectedCommunity?.name || "—"}</dd></div>
             <div><dt>Domínios</dt><dd>{selectedDomains.length ? selectedDomains.join(" · ") : "—"}</dd></div>
           </dl>

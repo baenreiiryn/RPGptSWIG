@@ -45,6 +45,9 @@ export const oracleTools: OracleTool[] = [
         },
         target: { type: "number", description: "Valor-alvo ou CD, quando conhecido." },
         dc: { type: "number", description: "Alias de target para uma Classe de Dificuldade." },
+        actionType: { type: "string", enum: ["attack", "damage", "check", "reaction"], description: "Informe a finalidade também em rolagens de Dualidade, para aplicar Dado do Lobo, fome e ataque potencializado corretamente." },
+        materialTarget: { type: "boolean", description: "Use false somente se o alvo for incorpóreo. Ataques contra o mundo material na Forma Espiritual exigem pagar 2 Esperança antes." },
+        advantage: { type: "boolean", description: "Vantagem: envie a fórmula-base SEM o dado de vantagem. O motor acrescenta d10 para Semi-Deus ou d6 normalmente; a fome do Vampiro cancela esta vantagem." },
         rollKind: {
           type: "string",
           enum: ["attack", "damage", "reaction", "check", "duality", "custom"],
@@ -90,6 +93,8 @@ export const oracleTools: OracleTool[] = [
       properties: {
         resource: { type: "string", enum: ["hp", "hope", "stress", "armor"] },
         amount: { type: "integer" },
+        healingSource: { type: "string", enum: ["rest", "risk", "other"] },
+        freshRemains: { type: "boolean", description: "Confirme acesso a restos frescos em uma ação de repouso para curar um Reanimado." },
         reason: { type: "string" }
       },
       required: ["resource", "amount", "reason"],
@@ -113,6 +118,32 @@ export const oracleTools: OracleTool[] = [
     }
   },
   {
+    name: "character_expansion_transformation_set",
+    description: "Registra aquisição ou remoção narrativa de uma transformação persistente da expansão. Fantasma marca 1 PV permanentemente na aquisição e a cada novo Patamar. Não confunda com Forma de Fera temporária.",
+    inputSchema: { type: "object", properties: {
+      transformation: { type: "string", enum: ["werewolf", "vampire", "ghost", "reanimated", "shapeshifter", "demigod"] }, active: { type: "boolean" }, reason: { type: "string", minLength: 1 },
+    }, required: ["transformation", "active", "reason"], additionalProperties: false },
+  },
+  {
+    name: "character_expansion_transformation_action",
+    description: "Usa uma característica de transformação já adquirida. wolf-form exige ter acabado de marcar PV; spirit-form custa 1 Fadiga para entrar/sair; interact custa 2 Esperança (forAttack prepara um ataque material); fangs solicita Força e informa dano Proficiência d8; feed exige Presas bem-sucedidas contra criatura viva, marca Fadiga e acumula até 5 marcadores; empower gasta um marcador antes do ataque; change-shape/change-benefit consomem ação de repouso. Cadáver (survive/accept-death) é escolha do jogador na interface.",
+    inputSchema: { type: "object", properties: {
+      transformation: { type: "string", enum: ["werewolf", "vampire", "ghost", "reanimated", "shapeshifter", "demigod"] },
+      action: { type: "string", enum: ["wolf-form", "spirit-form", "interact", "fangs", "feed", "empower", "change-shape", "change-benefit", "fear-failure"] },
+      rollId: { type: "string", description: "Para fear-failure do Semi-Deus: resultado registrado que o mestre adjudicou como fracasso com Medo. A escolha de Fadiga/Medo cabe ao jogador na interface." },
+      forAttack: { type: "boolean" }, target: { type: "number" }, attackRollId: { type: "string" }, attackSucceeded: { type: "boolean" },
+      targetLiving: { type: "boolean" }, targetHitPointsMarked: { type: "integer", minimum: 1 },
+      ancestryId: { type: "string" }, featureId: { type: "string" }, appearance: { type: "string" }, shortRest: { type: "boolean" }, reason: { type: "string", minLength: 1 },
+    }, required: ["transformation", "action", "reason"], additionalProperties: false },
+  },
+  {
+    name: "character_receive_damage",
+    description: "Aplica dano BRUTO ao personagem, antes dos limiares. Calcula imunidade física/vulnerabilidade mágica da Forma Espiritual e PV marcados pelos limiares. useArmor pode gastar um espaço de Armadura para reduzir a gravidade em um nível. Não reaplique o mesmo dano com character_adjust_resource.",
+    inputSchema: { type: "object", properties: {
+      amount: { type: "number", minimum: 0 }, damageType: { type: "string", enum: ["physical", "magic"] }, useArmor: { type: "boolean" }, reason: { type: "string", minLength: 1 },
+    }, required: ["amount", "damageType", "reason"], additionalProperties: false },
+  },
+  {
     name: "character_long_rest",
     description: "Registra o início, conclusão ou interrupção real de um descanso longo em Daggerheart. start elimina recursos que antes expiravam no fim da sessão. finish renova usos por sessão e devolve efeitos de início de ciclo. interrupt não renova usos. Não use para descanso curto ou simples passagem de tempo. Reutilize o restId retornado para concluir/interromper o mesmo descanso.",
     inputSchema: {
@@ -120,6 +151,7 @@ export const oracleTools: OracleTool[] = [
       properties: {
         phase: { type: "string", enum: ["start", "finish", "interrupt"] },
         restId: { type: "string", description: "Identificador do descanso iniciado, obrigatório em finish e interrupt." },
+        availableRestMoves: { type: "integer", minimum: 1, description: "Duas ações-base. Informe outro total apenas se regras/benefícios justificarem ações extras ou reduzidas." },
         reason: { type: "string", minLength: 1 },
       },
       required: ["phase", "reason"], additionalProperties: false,
@@ -133,6 +165,11 @@ export const oracleTools: OracleTool[] = [
       properties: { abilityId: { type: "string", minLength: 1 }, reason: { type: "string", minLength: 1 } },
       required: ["abilityId", "reason"], additionalProperties: false,
     },
+  },
+  {
+    name: "character_rest_move_spend",
+    description: "Consome UMA ação de repouso do descanso longo em andamento, antes de aplicar uma escolha normal de cura, reparo ou preparação. Ações do Metamorfo já consomem esse saldo automaticamente; não conte duas vezes. Informe o restId retornado no início do descanso.",
+    inputSchema: { type: "object", properties: { restId: { type: "string", minLength: 1 }, reason: { type: "string", minLength: 1 } }, required: ["restId", "reason"], additionalProperties: false },
   },
   {
     name: "character_ability_refresh",

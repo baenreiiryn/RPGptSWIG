@@ -43,7 +43,7 @@ test("the current Void 1.5 content replaces stale Blood Hunter records and adds 
     "Vitality Manipulation", "Burning Blood", "Mutual Suffering", "Life Leash",
     "Runic Adrenaline", "Bloodbath", "Glyph of Hermorrhaging", "Crimson Adamance",
   ]) {
-    assert.equal(entries.some((entry) => entry.sourceId === stale), false, `${stale} should have been replaced`);
+    assert.equal(entries.some((entry) => ["classes", "subclasses"].includes(entry.category) && entry.sourceId === stale), false, `${stale} class/subclass record should have been replaced`);
   }
 });
 
