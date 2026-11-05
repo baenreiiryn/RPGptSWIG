@@ -573,6 +573,7 @@ export async function runCyberTurn(
                 campaign: g.campaign,
                 date: cyberDate(cp.era, g.time.campaignMinute),
                 name: g.character.name,
+                appearance: g.character.appearance,
                 cyberpunk: { ...cp, recovery: undefined },
                 npcs: g.npcs,
                 quests: g.quests,

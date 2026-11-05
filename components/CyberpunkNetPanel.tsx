@@ -217,14 +217,14 @@ export default function CyberpunkNetPanel({
               </button>
             </div>
             <div className="cpHackList">
-              {QUICKHACKS.map((h) => (
+              {[...QUICKHACKS].sort((a,b)=>Number(cp.preferredQuickhacks?.includes(b.id)??false)-Number(cp.preferredQuickhacks?.includes(a.id)??false)).map((h) => (
                 <button
                   disabled={!!cp.pending || cp.roleRank < h.rank}
                   title={h.description}
                   key={h.id}
                   onClick={() => act(t.id, "quickhack", h.id)}
                 >
-                  <span>{h.name}</span>
+                  <span>{cp.preferredQuickhacks?.includes(h.id)?"★ ":""}{h.name}</span>
                   <b>DV{h.dv}</b>
                 </button>
               ))}

@@ -265,7 +265,11 @@ test("failed Jack In connects and alerts; each wall and attempted hack consume a
 });
 test("map markers belong to their era and all referenced local art exists", () => {
   assert.equal(state.defaultPlaces(2045).length, 43);
-  assert.equal(state.defaultPlaces(2077).length, 17);
+  assert.equal(
+    state.defaultPlaces(2077).filter((p) => p.precision === "district").length,
+    17,
+  );
+  assert.ok(state.defaultPlaces(2077).length > 17);
   for (const era of [2045, 2077])
     for (const p of state.defaultPlaces(era)) {
       assert.equal(p.era, era);
@@ -569,4 +573,197 @@ test("3D sign handling subtracts only skill implosions, not free or Humanity dic
       [1, 2],
     );
   }
+});
+
+test("role presets distribute exactly 62 points with role-specific priorities", async () => {
+  const creation = await import("../lib/cyberpunk/creation.ts");
+  for (const role of cat.roles) {
+    const stats = creation.suggestedCyberStats(role.name);
+    assert.equal(
+      Object.values(stats).reduce((a, b) => a + b, 0),
+      62,
+    );
+    assert.ok(Object.values(stats).every((v) => v >= 2 && v <= 8));
+  }
+  assert.equal(creation.suggestedCyberStats("Netrunner").int, 8);
+  assert.equal(creation.suggestedCyberStats("Solo").ref, 8);
+  assert.equal(creation.suggestedCyberStats("Tech").tech, 8);
+});
+
+test("starter suggestions for every role and era fit one budget and install compatibly", async () => {
+  const creation = await import("../lib/cyberpunk/creation.ts");
+  for (const era of [2045, 2077])
+    for (const role of cat.roles) {
+      const items = [
+        ...creation.suggestedCyberEquipment(role.name, era),
+        ...creation.suggestedCyberware(role.name, era, true),
+      ];
+      const cp = state.previewCyberCreation({
+        era,
+        stats: creation.suggestedCyberStats(role.name),
+        role: role.name,
+        skills: state.suggestedCyberSkills(role.name),
+        items: items.map((e) => e.id),
+        neuroport: true,
+      });
+      assert.ok(cp.eddies >= 0);
+      assert.ok(
+        cp.inventory
+          .filter((i) => i.type === "cyberware")
+          .every((i) => i.installed),
+      );
+      assert.ok(cp.humanity >= 0 && cp.humanity <= cp.maxHumanity);
+      if (role.name === "Netrunner" && era === 2077) {
+        assert.ok(
+          cp.inventory.some(
+            (i) => i.name === "Neuroport Cyberdeck Port" && i.installed,
+          ),
+        );
+        assert.ok(cp.inventory.some((i) => i.type === "cyberdeck"));
+      }
+    }
+});
+
+test("creation rejects unaffordable or baseless cyberware and preserves portrait and quickhack favorites", () => {
+  const e = (name) => cat.cyberCatalog.find((e) => e.name === name);
+  assert.throws(
+    () =>
+      state.previewCyberCreation({
+        era: 2045,
+        stats: rules.DEFAULT_STATS,
+        role: "Solo",
+        skills: {},
+        items: [e("Sandevistan").id],
+        neuroport: false,
+      }),
+    /base/i,
+  );
+  assert.throws(
+    () =>
+      state.previewCyberCreation({
+        era: 2045,
+        stats: rules.DEFAULT_STATS,
+        role: "Solo",
+        skills: {},
+        items: [e("Linear Frame β (Beta)").id],
+        neuroport: false,
+      }),
+    /insuficientes/i,
+  );
+  const g = state.buildCyberCampaign({
+    era: 2077,
+    campaignName: "Portrait",
+    name: "V",
+    tone: "Noir",
+    hook: "",
+    role: "Netrunner",
+    stats: rules.DEFAULT_STATS,
+    skills: state.suggestedCyberSkills("Netrunner"),
+    items: [],
+    nativeLanguage: "Português",
+    history: "Texto editável",
+    neuroport: true,
+    image: "data:image/jpeg;base64,YQ==",
+    appearance: "Cabelo azul",
+    preferredQuickhacks: ["short", "sonic"],
+  });
+  assert.equal(g.character.image, "data:image/jpeg;base64,YQ==");
+  assert.equal(g.character.appearance, "Cabelo azul");
+  assert.deepEqual(g.cyberpunk.preferredQuickhacks, ["short", "sonic"]);
+});
+
+test("map zoom anchors the cursor and zoomed placement inverts the transform", async () => {
+  const map = await import("../lib/cyberpunk/mapGeometry.ts");
+  const old = { x: -100, y: -200, scale: 4 },
+    anchor = { x: 180, y: 240 };
+  const next = map.zoomAt(old, anchor, 8);
+  assert.deepEqual(map.mapPoint(anchor, old), map.mapPoint(anchor, next));
+  assert.deepEqual(
+    map.mapPoint({ x: 300, y: 400 }, { x: -100, y: -200, scale: 4 }),
+    { x: 100, y: 150 },
+  );
+});
+
+test("existing campaign places survive POI additions and every detailed pin has finite coordinates", async () => {
+  const places = await import("../lib/cyberpunk/places.ts");
+  const custom = {
+    id: "my-home",
+    name: "Casa",
+    x: 22,
+    y: 33,
+    district: "Kabuki",
+    address: "Campanha",
+    era: 2077,
+    precision: "custom",
+  };
+  const merged = places.mergeNightCityPlaces([custom], 2077);
+  assert.deepEqual(
+    merged.find((p) => p.id === "my-home"),
+    custom,
+  );
+  assert.equal(new Set(merged.map((p) => p.id)).size, merged.length);
+  assert.ok(merged.some((p) => p.name.includes("Viktor")));
+  assert.ok(
+    merged
+      .filter((p) => p.streetPosition)
+      .every((p) =>
+        [p.streetPosition.x, p.streetPosition.y].every(
+          (n) => Number.isFinite(n) && n >= 0 && n <= 100,
+        ),
+      ),
+  );
+  assert.equal(places.mergeNightCityPlaces(merged, 2077).length, merged.length);
+  assert.ok(places.defaultNightCityPlaces(2045).every((p) => p.era === 2045));
+});
+
+test("adult Neuroport suggestions install once and restart retains the compressed portrait", async () => {
+  const creation = await import("../lib/cyberpunk/creation.ts");
+  const items = [
+    ...creation.suggestedCyberEquipment("Netrunner", 2077),
+    ...creation.suggestedCyberware("Netrunner", 2077, false),
+  ].map((e) => e.id);
+  const g = state.buildCyberCampaign({
+    era: 2077,
+    campaignName: "Adult",
+    name: "Merc",
+    tone: "Noir",
+    hook: "",
+    stats: creation.suggestedCyberStats("Netrunner"),
+    skills: state.suggestedCyberSkills("Netrunner"),
+    role: "Netrunner",
+    items,
+    neuroport: false,
+    history: "",
+    nativeLanguage: "Português",
+    image: "data:image/jpeg;base64,YQ==",
+  });
+  assert.ok(
+    g.cyberpunk.inventory.some((i) => i.name === "Neuroport" && i.installed),
+  );
+  assert.ok(!g.cyberpunk.inventory.some((i) => i.name === "Neuroport (Free)"));
+  assert.ok(g.cyberpunk.humanity < g.cyberpunk.stats.emp * 10);
+  g.campaign.restartSnapshot = game.createCampaignRestartSnapshot(g);
+  assert.equal(g.campaign.restartSnapshot.character.image, undefined);
+  const reopened = game.ensureGameStateCharacterModel(
+    JSON.parse(JSON.stringify(g)),
+  );
+  assert.equal(
+    game.restartCampaignFromSnapshot(reopened).character.image,
+    g.character.image,
+  );
+});
+
+test("Cyberpunk normalization is identity-stable after adding new default locations", () => {
+  const g = campaign();
+  assert.equal(game.ensureGameStateCharacterModel(g), g);
+  const legacy = {
+    ...g,
+    cyberpunk: {
+      ...g.cyberpunk,
+      places: g.cyberpunk.places.filter((p) => !p.id.includes("-poi-")),
+    },
+  };
+  const normalized = game.ensureGameStateCharacterModel(legacy);
+  assert.notEqual(normalized, legacy);
+  assert.equal(game.ensureGameStateCharacterModel(normalized), normalized);
 });

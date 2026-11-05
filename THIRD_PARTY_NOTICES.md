@@ -31,3 +31,9 @@ Cyberpunk reference records, maps, illustrations and d6/d10 dice faces were impo
 Cyberpunk RED, Cyberpunk Edgerunners and their associated artwork and names remain the property of their respective rights holders. Importing this material does not transfer ownership or grant a new redistribution license. These notices do not represent permission from those rights holders.
 
 The six Cyberpunk interface atlas crops come from an image generated for this OracleRPG implementation. They are distinct from the reference artwork imported from the archive.
+
+## Night City detailed map reference
+
+The optional online streets layer requests visible map tiles from Gamestegy's public Cyberpunk 2077 map CDN and credits the provider in the map UI. The local atlas remains available when the online layer fails. Tile artwork is not bundled or rehosted in this repository; availability depends on the provider. Cyberpunk 2077 artwork belongs to its respective rights holders, including CD PROJEKT RED.
+
+`lib/cyberpunk/poi2077.json` contains a curated set of 32 location names and geographic coordinates referenced from https://gamestegy.com/cyberpunk-2077/maps/night-city on 2026-11-05. Original descriptions, icon assets, progression markers and implementation code are not imported. Atlas positions are approximate; the detailed layer uses the reference coordinates. Access-point markers can identify the approach to a venue rather than its building footprint. IGN's Night City map is also linked as a user-selected reference.

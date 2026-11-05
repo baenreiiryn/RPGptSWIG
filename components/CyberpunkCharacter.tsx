@@ -94,6 +94,8 @@ export default function CyberpunkCharacter({
             ARQUIVO PESSOAL // {cp.role} {cp.roleRank}
           </small>
           <h1>{game.character.name}</h1>
+          {game.character.image && <img className="cpCharacterPortrait" src={game.character.image} alt={`Retrato de ${game.character.name}`}/>}
+          {game.character.appearance && <p>{game.character.appearance}</p>}
           <p>
             {cp.eddies} €$ · Humanidade {cp.humanity}/{cp.maxHumanity} · EMP{" "}
             {effectiveEmpathy(cp)} · {cp.ip} IP

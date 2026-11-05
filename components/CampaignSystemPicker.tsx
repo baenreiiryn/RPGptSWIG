@@ -30,6 +30,7 @@ export default function CampaignSystemPicker({
     return (
       <CyberpunkCampaignWizard
         era={system}
+        ai={ai}
         onBack={() => setSystem(null)}
         onComplete={onCyberpunk}
       />

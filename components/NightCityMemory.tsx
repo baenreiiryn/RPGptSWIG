@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import NightCityMap, { type CityMapLayer } from "./NightCityMap";
+import { mergeNightCityPlaces, PLACE_CATEGORIES } from "@/lib/cyberpunk/places";
 import type { GameState } from "@/lib/game";
 import { cyberDate } from "@/lib/cyberpunk/rules";
 import { withCyberState } from "@/lib/cyberpunk/state";
@@ -10,9 +12,16 @@ export default function NightCityMemory({
   game: GameState;
   onChange: (g: GameState) => void;
 }) {
-  const cp = game.cyberpunk!;
+  const cp = {
+    ...game.cyberpunk!,
+    places: mergeNightCityPlaces(game.cyberpunk!.places, game.cyberpunk!.era),
+  };
   const [selected, setSelected] = useState(cp.locationId),
-    [zoom, setZoom] = useState(1),
+    [layer, setLayer] = useState<CityMapLayer>(
+      cp.era === 2077 ? "streets" : "atlas",
+    ),
+    [placeQuery, setPlaceQuery] = useState(""),
+    [category, setCategory] = useState(""),
     [search, setSearch] = useState(""),
     [date, setDate] = useState(""),
     [adding, setAdding] = useState(false),
@@ -24,6 +33,28 @@ export default function NightCityMemory({
     [text, setText] = useState(""),
     [npcIds, setNpcIds] = useState<string[]>([]),
     [questIds, setQuestIds] = useState<string[]>([]);
+  const visible = cp.places.filter(
+    (p) =>
+      (!category ||
+        (p.category ?? (p.precision === "custom" ? "custom" : "landmark")) ===
+          category) &&
+      (!placeQuery ||
+        (p.name + " " + p.district + " " + p.address)
+          .toLocaleLowerCase()
+          .includes(placeQuery.toLocaleLowerCase())),
+  );
+  function selectPlace(id: string) {
+    const p = cp.places.find((p) => p.id === id);
+    setSelected(id);
+    if (p && !p.streetPosition) setLayer("atlas");
+    else if (p?.mapLayer === "streets") setLayer("streets");
+  }
+  const counts = Object.fromEntries(
+    cp.places.map((p) => [
+      p.id,
+      cp.cityEvents.filter((e) => e.placeId === p.id).length,
+    ]),
+  );
   const place = cp.places.find((p) => p.id === selected),
     events = cp.cityEvents
       .filter(
@@ -50,6 +81,9 @@ export default function NightCityMemory({
       y: position.y,
       era: cp.era,
       precision: "custom" as const,
+      category: "custom",
+      mapLayer: layer,
+      ...(layer === "streets" ? { streetPosition: { ...position } } : {}),
     };
     onChange(withCyberState(game, { ...cp, places: [...cp.places, p] }));
     setSelected(p.id);
@@ -102,70 +136,59 @@ export default function NightCityMemory({
           </p>
         </div>
         <div className="cpButtonRow">
-          <button
-            aria-label="Diminuir mapa"
-            onClick={() => setZoom(Math.max(0.75, zoom - 0.25))}
-          >
-            −
-          </button>
-          <button
-            aria-label="Ampliar mapa"
-            onClick={() => setZoom(Math.min(3, zoom + 0.25))}
-          >
-            ＋
-          </button>
           <button aria-pressed={adding} onClick={() => setAdding(!adding)}>
             {adding ? "Cancelar marcação" : "Marcar endereço"}
           </button>
         </div>
       </header>
       <div className="cpMapLayout">
-        <div
-          className="cpMapScroll"
-          tabIndex={0}
-          aria-label="Mapa interativo de Night City"
-        >
-          <div
-            className="cpMapCanvas"
-            style={{ width: `${zoom * 100}%` }}
-            onClick={(e) => {
-              if (!adding) return;
-              const r = e.currentTarget.getBoundingClientRect();
-              setPosition({
-                x: Math.round(((e.clientX - r.left) / r.width) * 10000) / 100,
-                y: Math.round(((e.clientY - r.top) / r.height) * 10000) / 100,
-              });
-            }}
-          >
-            <img
-              draggable={false}
-              src={`/cyberpunk/night-city-${cp.era}.${cp.era === 2045 ? "png" : "webp"}`}
-              alt={`Mapa de Night City em ${cp.era}`}
+        <div>
+          <div className="cpFilters cpPlaceFilters">
+            <input
+              aria-label="Buscar locais"
+              placeholder="Estabelecimento, bairro ou endereço"
+              value={placeQuery}
+              onChange={(e) => setPlaceQuery(e.target.value)}
             />
-            {cp.places.map((p) => (
-              <button
-                key={p.id}
-                className={`cpMapPin ${p.id === selected ? "selected" : ""} ${cp.cityEvents.some((e) => e.placeId === p.id) ? "hasEvents" : ""}`}
-                style={{ left: p.x + "%", top: p.y + "%" }}
-                title={p.name}
-                aria-label={`${p.name}, ${cp.cityEvents.filter((e) => e.placeId === p.id).length} acontecimentos`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelected(p.id);
-                }}
-              >
-                {cp.cityEvents.filter((e) => e.placeId === p.id).length || "·"}
-              </button>
-            ))}
-            {adding && (
-              <span
-                className="cpMapCross"
-                style={{ left: position.x + "%", top: position.y + "%" }}
-              >
-                ＋
-              </span>
-            )}
+            <select
+              aria-label="Tipo de local"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="">Todos os locais</option>
+              {Object.entries(PLACE_CATEGORIES).map(([id, label]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
+          <NightCityMap
+            era={cp.era}
+            places={visible}
+            selected={selected}
+            counts={counts}
+            adding={adding}
+            position={position}
+            layer={layer}
+            onLayer={setLayer}
+            onSelect={selectPlace}
+            onPosition={setPosition}
+          />
+          {(placeQuery || category) && (
+            <div className="cpPlaceResults" aria-label="Resultados de locais">
+              {visible.length ? (
+                visible.map((p) => (
+                  <button key={p.id} onClick={() => selectPlace(p.id)}>
+                    {p.name}
+                    <small>{p.district}</small>
+                  </button>
+                ))
+              ) : (
+                <p>Nenhum local encontrado.</p>
+              )}
+            </div>
+          )}
         </div>
         <aside className="cpPanel cpPlacePanel">
           {adding ? (
@@ -209,7 +232,7 @@ export default function NightCityMemory({
                 <select
                   aria-label="Local"
                   value={selected}
-                  onChange={(e) => setSelected(e.target.value)}
+                  onChange={(e) => selectPlace(e.target.value)}
                 >
                   {cp.places.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -223,11 +246,26 @@ export default function NightCityMemory({
                   <small>{place.district}</small>
                   <h2>{place.name}</h2>
                   <p>{place.address}</p>
+                  {place.referenceUrl && (
+                    <p>
+                      <a
+                        href={place.referenceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Ver referência da localização ↗
+                      </a>
+                    </p>
+                  )}
                   <small>
                     {place.precision === "district"
                       ? "Marcador do bairro; cadastre endereços para pontos específicos."
                       : place.precision === "landmark"
-                        ? "Ponto de referência do mapa do livro."
+                        ? place.referenceUrl
+                          ? layer === "streets"
+                            ? "Ponto de acesso da referência no mapa de ruas."
+                            : "Posição aproximada no atlas; consulte a camada de ruas."
+                          : "Ponto de referência do mapa do livro."
                         : "Endereço definido nesta campanha."}
                   </small>
                   <button
@@ -238,6 +276,7 @@ export default function NightCityMemory({
                           locationId: place.id,
                         }),
                         campaign: { ...game.campaign, scene: place.name },
+                        cyberpunk: { ...cp, locationId: place.id },
                       })
                     }
                   >

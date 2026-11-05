@@ -1,0 +1,514 @@
+[
+  {
+    "id": "2077-poi-3933",
+    "name": "EBM Petrochem Stadium",
+    "category": "landmark",
+    "district": "Dogtown",
+    "address": "EBM Petrochem Stadium · Dogtown, Night City",
+    "x": 48,
+    "y": 81,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 36.413574,
+      "y": 48.461973
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3933"
+  },
+  {
+    "id": "2077-poi-3938",
+    "name": "Grand Imperial Mall",
+    "category": "landmark",
+    "district": "Coastview",
+    "address": "Grand Imperial Mall · Coastview, Night City",
+    "x": 32,
+    "y": 79,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 31.005859,
+      "y": 49.011218
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3938"
+  },
+  {
+    "id": "2077-poi-3917",
+    "name": "Arasaka Tower",
+    "category": "landmark",
+    "district": "Corpo Plaza",
+    "address": "Arasaka Tower · Corpo Plaza, Night City",
+    "x": 47,
+    "y": 55,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 36.157227,
+      "y": 33.972163
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3917"
+  },
+  {
+    "id": "2077-poi-3920",
+    "name": "Embers",
+    "category": "bar",
+    "district": "The Glen",
+    "address": "Embers · The Glen, Night City",
+    "x": 41,
+    "y": 61,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 33.837891,
+      "y": 37.42673
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3920"
+  },
+  {
+    "id": "2077-poi-3905",
+    "name": "El Coyote Cojo",
+    "category": "bar",
+    "district": "The Glen",
+    "address": "El Coyote Cojo · The Glen, Night City",
+    "x": 43,
+    "y": 67,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 36.791992,
+      "y": 41.015674
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3905"
+  },
+  {
+    "id": "2077-poi-3931",
+    "name": "Chapel",
+    "category": "landmark",
+    "district": "Coastview",
+    "address": "Chapel · Coastview, Night City",
+    "x": 39,
+    "y": 79,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 33.679199,
+      "y": 47.692851
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3931"
+  },
+  {
+    "id": "2077-poi-3821",
+    "name": "Kabuki Market",
+    "category": "landmark",
+    "district": "Kabuki",
+    "address": "Kabuki Market · Kabuki, Night City",
+    "x": 51,
+    "y": 35,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 38.049316,
+      "y": 21.191567
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3821"
+  },
+  {
+    "id": "2077-poi-3842",
+    "name": "Megabuilding H10: Atrium",
+    "category": "landmark",
+    "district": "Little China",
+    "address": "Megabuilding H10: Atrium · Little China, Night City",
+    "x": 43,
+    "y": 37,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 36.26709,
+      "y": 26.043747
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3842"
+  },
+  {
+    "id": "2077-poi-3845",
+    "name": "Afterlife",
+    "category": "bar",
+    "district": "Little China",
+    "address": "Afterlife · Little China, Night City",
+    "x": 43,
+    "y": 41,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 35.668945,
+      "y": 27.673403
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3845"
+  },
+  {
+    "id": "2077-poi-3855",
+    "name": "Jig-Jig Street",
+    "category": "landmark",
+    "district": "Japantown",
+    "address": "Jig-Jig Street · Japantown, Night City",
+    "x": 60,
+    "y": 47,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 41.357422,
+      "y": 28.686579
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=3855"
+  },
+  {
+    "id": "2077-poi-4086",
+    "name": "Wakako Okada",
+    "category": "fixer",
+    "district": "Japantown",
+    "address": "Wakako Okada · Japantown, Night City",
+    "x": 60,
+    "y": 47,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 41.210938,
+      "y": 28.991649
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4086"
+  },
+  {
+    "id": "2077-poi-4079",
+    "name": "Regina Jones",
+    "category": "fixer",
+    "district": "Kabuki",
+    "address": "Regina Jones · Kabuki, Night City",
+    "x": 48,
+    "y": 34,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 38.024902,
+      "y": 24.011129
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4079"
+  },
+  {
+    "id": "2077-poi-4117",
+    "name": "Muamar “El Capitan” Reyes",
+    "category": "fixer",
+    "district": "Santo Domingo",
+    "address": "Muamar “El Capitan” Reyes · Santo Domingo, Night City",
+    "x": 75,
+    "y": 75,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 48.187256,
+      "y": 50.169342
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4117"
+  },
+  {
+    "id": "2077-poi-4099",
+    "name": "Sebastian “Padre” Ibarra",
+    "category": "fixer",
+    "district": "The Glen",
+    "address": "Sebastian “Padre” Ibarra · The Glen, Night City",
+    "x": 40,
+    "y": 67,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 33.740234,
+      "y": 42.785491
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4099"
+  },
+  {
+    "id": "2077-poi-4093",
+    "name": "Dino Dinovic",
+    "category": "fixer",
+    "district": "Downtown",
+    "address": "Dino Dinovic · Downtown, Night City",
+    "x": 29,
+    "y": 52,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 33.398438,
+      "y": 32.080081
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4093"
+  },
+  {
+    "id": "2077-poi-4111",
+    "name": "Mr. Hands",
+    "category": "fixer",
+    "district": "Coastview",
+    "address": "Mr. Hands · Coastview, Night City",
+    "x": 35,
+    "y": 79,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 35.278701,
+      "y": 49.919055
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4111"
+  },
+  {
+    "id": "2077-poi-4104",
+    "name": "Dakota Smith",
+    "category": "fixer",
+    "district": "Badlands",
+    "address": "Dakota Smith · Badlands, Night City",
+    "x": 93,
+    "y": 76,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 61.486816,
+      "y": 39.636232
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4104"
+  },
+  {
+    "id": "2077-poi-4076",
+    "name": "Yoko",
+    "category": "netrunner",
+    "district": "Kabuki",
+    "address": "Yoko · Kabuki, Night City",
+    "x": 49,
+    "y": 34,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 37.93335,
+      "y": 21.118167
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4076"
+  },
+  {
+    "id": "2077-poi-4089",
+    "name": "Chang Hoon Nam",
+    "category": "netrunner",
+    "district": "Japantown",
+    "address": "Chang Hoon Nam · Japantown, Night City",
+    "x": 62,
+    "y": 48,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 42.242432,
+      "y": 30.547991
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4089"
+  },
+  {
+    "id": "2077-poi-4170",
+    "name": "Fingers M.D.",
+    "category": "clinic",
+    "district": "Japantown",
+    "address": "Fingers M.D. · Japantown, Night City",
+    "x": 62,
+    "y": 47,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 42.034912,
+      "y": 29.223636
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4170"
+  },
+  {
+    "id": "2077-poi-4162",
+    "name": "Robert Rainwater",
+    "category": "clinic",
+    "district": "Kabuki",
+    "address": "Robert Rainwater · Kabuki, Night City",
+    "x": 47,
+    "y": 35,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 37.341309,
+      "y": 21.746828
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4162"
+  },
+  {
+    "id": "2077-poi-4167",
+    "name": "Viktor’s Clinic",
+    "category": "clinic",
+    "district": "Little China",
+    "address": "Viktor’s Clinic · Little China, Night City",
+    "x": 42,
+    "y": 38,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 35.479738,
+      "y": 26.434326
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4167"
+  },
+  {
+    "id": "2077-poi-4160",
+    "name": "Cassius Ryder",
+    "category": "clinic",
+    "district": "Northside",
+    "address": "Cassius Ryder · Northside, Night City",
+    "x": 43,
+    "y": 28,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 34.460449,
+      "y": 18.743903
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4160"
+  },
+  {
+    "id": "2077-poi-4168",
+    "name": "Rifles & Pistols (Japantown)",
+    "category": "shop",
+    "district": "Japantown",
+    "address": "Rifles & Pistols (Japantown) · Japantown, Night City",
+    "x": 61,
+    "y": 43,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 42.669678,
+      "y": 25.016707
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4168"
+  },
+  {
+    "id": "2077-poi-4159",
+    "name": "Lots of Guns (Northside)",
+    "category": "shop",
+    "district": "Northside",
+    "address": "Lots of Guns (Northside) · Northside, Night City",
+    "x": 44,
+    "y": 25,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 33.251957,
+      "y": 16.845595
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4159"
+  },
+  {
+    "id": "2077-poi-4163",
+    "name": "Gun-O-Rama (Kabuki)",
+    "category": "shop",
+    "district": "Kabuki",
+    "address": "Gun-O-Rama (Kabuki) · Kabuki, Night City",
+    "x": 50,
+    "y": 34,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 37.677002,
+      "y": 20.965605
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4163"
+  },
+  {
+    "id": "2077-poi-4166",
+    "name": "2nd Amendment",
+    "category": "shop",
+    "district": "Little China",
+    "address": "2nd Amendment · Little China, Night City",
+    "x": 42,
+    "y": 37,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 36.05957,
+      "y": 25.897184
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=4166"
+  },
+  {
+    "id": "2077-poi-645854",
+    "name": "Konpeki Plaza Bar",
+    "category": "bar",
+    "district": "Arasaka Waterfront",
+    "address": "Konpeki Plaza Bar · Arasaka Waterfront, Night City",
+    "x": 29,
+    "y": 32,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 31.099688,
+      "y": 22.888281
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=645854"
+  },
+  {
+    "id": "2077-poi-645853",
+    "name": "Ho-Oh Bar",
+    "category": "bar",
+    "district": "Kabuki",
+    "address": "Ho-Oh Bar · Kabuki, Night City",
+    "x": 53,
+    "y": 39,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 38.829609,
+      "y": 25.621094
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=645853"
+  },
+  {
+    "id": "2077-poi-645857",
+    "name": "Totentanz",
+    "category": "bar",
+    "district": "Northside",
+    "address": "Totentanz · Northside, Night City",
+    "x": 43,
+    "y": 31,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 34.331367,
+      "y": 19.874727
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=645857"
+  },
+  {
+    "id": "2077-poi-645855",
+    "name": "Red Dirt",
+    "category": "bar",
+    "district": "Arroyo",
+    "address": "Red Dirt · Arroyo, Night City",
+    "x": 61,
+    "y": 68,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 40.852148,
+      "y": 41.098828
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=645855"
+  },
+  {
+    "id": "2077-poi-645856",
+    "name": "The Moth",
+    "category": "bar",
+    "district": "Dogtown",
+    "address": "The Moth · Dogtown, Night City",
+    "x": 30,
+    "y": 88,
+    "era": 2077,
+    "precision": "landmark",
+    "streetPosition": {
+      "x": 29.636328,
+      "y": 52.078164
+    },
+    "referenceUrl": "https://gamestegy.com/cyberpunk-2077/maps/night-city?marker-id=645856"
+  }
+]

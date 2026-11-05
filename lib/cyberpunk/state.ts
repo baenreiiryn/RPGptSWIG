@@ -15,9 +15,10 @@ import {
   roles,
   type CyberEntry,
 } from "./catalog";
-import places from "./places.generated.json" with { type: "json" };
-export const defaultPlaces = (era: CyberpunkEra) =>
-  (places as Place[]).filter((p) => p.era === era).map((p) => ({ ...p }));
+import { QUICKHACKS } from "./hacking";
+import { isFashion } from "./creation";
+import { defaultNightCityPlaces } from "./places";
+export const defaultPlaces = defaultNightCityPlaces;
 export function skillOptions() {
   const list = [...skillEntries];
   for (const name of BASIC_SKILLS)
@@ -115,9 +116,14 @@ export function installCyberware(
     throw Error("Este implante pertence a 2077.");
   if (
     !e.data.isFoundational &&
-    ["neuralWare", "cyberEye", "cyberAudio", "cyberArm", "cyberLeg"].includes(
-      e.data.type ?? "",
-    ) &&
+    [
+      "neuralWare",
+      "cyberEye",
+      "cyberAudio",
+      "cyberAudioSuite",
+      "cyberArm",
+      "cyberLeg",
+    ].includes(e.data.type ?? "") &&
     Number(e.data.size) > 0
   ) {
     const parent = s.inventory.find((i) => i.id === parentId && i.installed),
@@ -125,6 +131,11 @@ export function installCyberware(
     if (!parent || !base?.data.installedItems?.allowed)
       throw Error("Escolha uma base instalada compatível.");
     if (base.data.type !== e.data.type) throw Error("Base incompatível.");
+    if (
+      e.name === "Neuroport Cyberdeck Port" &&
+      !/^Neuroport(?: \(Free\))?$/.test(parent.name)
+    )
+      throw Error("Cyberdeck Port exige um Neuroport instalado.");
     if (e.name === "Ex-Disk" && parent.name !== "Neuroport Cyberdeck Port")
       throw Error("Ex-Disk exige Cyberdeck Port.");
     const used = s.inventory
@@ -139,6 +150,11 @@ export function installCyberware(
     )
       throw Error("Slots insuficientes.");
   }
+  if (
+    e.name === "Neuroport Cyberdeck Port" &&
+    s.inventory.some((i) => i.installed && i.name === e.name)
+  )
+    throw Error("Somente um Neuroport Cyberdeck Port pode ser instalado.");
   const loss = rolledLoss ?? humanityLossOf(e);
   if (!Number.isFinite(loss) || loss < 0)
     throw Error("Perda de Humanidade inválida.");
@@ -258,7 +274,67 @@ export type CyberCreation = {
   nativeLanguage: string;
   items: string[];
   neuroport: boolean;
+  image?: string;
+  appearance?: string;
+  preferredQuickhacks?: string[];
 };
+export function previewCyberCreation(
+  d: Pick<
+    CyberCreation,
+    "era" | "stats" | "role" | "skills" | "items" | "neuroport"
+  >,
+): CyberpunkState {
+  let cp = newCyberState(d.era, d.stats, d.role, d.skills);
+  const entries = d.items.map((id) => {
+    const e = findCyberEntry(id);
+    if (!e || e.name === "Neuroport (Free)")
+      throw Error("Equipamento inicial inválido.");
+    return e;
+  });
+  cp.eddies += Math.min(
+    800,
+    entries.filter(isFashion).reduce((n, e) => n + priceOf(e), 0),
+  );
+  for (const e of entries) cp = purchaseItem(cp, e);
+  if (d.era === 2077 && d.neuroport) {
+    const e = findCyberEntry("2077:VD9p2yB1SjtwP1w6")!;
+    cp = purchaseItem(cp, e);
+    cp = installCyberware(cp, cp.inventory.at(-1)!.id);
+  }
+  const cyber = cp.inventory.filter(
+    (i) => i.type === "cyberware" && !i.installed,
+  );
+  // Bases are installed first. Options are assigned to the first compatible base with room.
+  const sorted = [...cyber].sort(
+    (a, b) =>
+      Number(!!findCyberEntry(b.sourceId)?.data.isFoundational) -
+      Number(!!findCyberEntry(a.sourceId)?.data.isFoundational),
+  );
+  for (const item of sorted) {
+    const entry = findCyberEntry(item.sourceId)!;
+    const parents = cp.inventory.filter(
+      (i) =>
+        i.installed &&
+        findCyberEntry(i.sourceId)?.data.type === entry.data.type,
+    );
+    let installed: CyberpunkState | undefined, failure: unknown;
+    for (const parentId of [...parents.map((i) => i.id), undefined]) {
+      try {
+        installed = installCyberware(cp, item.id, parentId);
+        break;
+      } catch (e) {
+        failure = e;
+      }
+    }
+    if (!installed) throw Error(item.name + ": " + (failure as Error).message);
+    cp = installed;
+  }
+  if (cp.humanity < 0)
+    throw Error("Cyberware inicial excede a Humanidade disponível.");
+  for (const i of cp.inventory.filter((i) => i.type === "armor"))
+    cp = equipArmor(cp, i.id);
+  return cp;
+}
 export function buildCyberCampaign(d: CyberCreation): GameState {
   const errors = validateBuild(d.stats, d.skills, difficultSkills);
   if (!d.name.trim() || !d.campaignName.trim() || !d.nativeLanguage.trim())
@@ -269,32 +345,15 @@ export function buildCyberCampaign(d: CyberCreation): GameState {
   )
     errors.push("Perícia desconhecida.");
   if (errors.length) throw Error(errors.join(" "));
-  let cp = newCyberState(d.era, d.stats, d.role, d.skills);
+  let cp = previewCyberCreation(d);
   cp.history = d.history;
   cp.nativeLanguage = d.nativeLanguage;
-  const fashionCredit = Math.min(
-    800,
-    d.items.reduce((n, id) => {
-      const e = findCyberEntry(id);
-      return (
-        n +
-        (e && (e.type === "clothing" || e.data.type === "fashionWare")
-          ? priceOf(e)
-          : 0)
-      );
-    }, 0),
-  );
-  cp.eddies += fashionCredit;
-  for (const id of d.items) {
-    const e = findCyberEntry(id);
-    if (!e) throw Error("Equipamento desconhecido.");
-    cp = purchaseItem(cp, e);
-  }
-  if (d.era === 2077 && d.neuroport) {
-    const e = findCyberEntry("2077:VD9p2yB1SjtwP1w6")!;
-    cp = purchaseItem(cp, e);
-    cp = installCyberware(cp, cp.inventory.at(-1)!.id);
-  }
+  if (d.preferredQuickhacks?.some((id) => !QUICKHACKS.some((h) => h.id === id)))
+    throw Error("Quickhack desconhecido.");
+  cp.preferredQuickhacks =
+    d.era === 2077 && d.role === "Netrunner"
+      ? [...new Set(d.preferredQuickhacks ?? [])]
+      : undefined;
   cp.places = defaultPlaces(d.era);
   cp.locationId = cp.places[0].id;
   const createdAt = new Date().toISOString(),
@@ -356,6 +415,8 @@ export function buildCyberCampaign(d: CyberCreation): GameState {
     character: {
       id: crypto.randomUUID(),
       name: d.name.trim(),
+      image: d.image || undefined,
+      appearance: d.appearance?.trim() || undefined,
       archetype: d.role,
       level: 1,
       tier: 1,

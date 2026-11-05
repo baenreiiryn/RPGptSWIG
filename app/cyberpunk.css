@@ -1084,3 +1084,224 @@
     transition: none !important;
   }
 }
+
+/* Creation dossier and geographic explorer */
+.cpOriginLayout {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.65fr) minmax(0, 1.4fr);
+  gap: 24px;
+  align-items: start;
+}
+.cpPortraitEditor {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.cpPortraitEditor > img {
+  width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  background: #03090f;
+  border: 1px solid #284551;
+}
+.cpPortraitPlaceholder {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  border: 1px dashed #284551;
+  color: var(--cp-cyan);
+  letter-spacing: 3px;
+}
+.cpPortraitEditor input[type="file"] {
+  max-width: 100%;
+  font-size: 12px;
+}
+.cpAiConnect {
+  padding: 12px 16px;
+  border: 1px solid var(--cp-cyan);
+}
+.cpCharacterPortrait {
+  display: block;
+  max-width: 220px;
+  max-height: 300px;
+  object-fit: contain;
+  border: 1px solid var(--cp-red);
+}
+.cpStarterSummary {
+  display: flex;
+  gap: 24px;
+  padding: 16px 0;
+  align-items: center;
+}
+.cpStarterSummary > img {
+  width: 140px;
+  max-height: 270px;
+  object-fit: contain;
+}
+.cpQuickChoice {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.cpQuickChoice > span {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--cp-cyan);
+}
+.cpQuickChoice input[type="checkbox"] {
+  width: auto;
+}
+.cpMapExplorer {
+  min-width: 0;
+}
+.cpMapControls {
+  margin-bottom: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cpMapControls select {
+  flex: 1;
+  min-width: 180px;
+}
+.cpMapViewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 66dvh;
+  min-height: 360px;
+  max-height: 800px;
+  background: #08141d;
+  border: 1px solid #284551;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  isolation: isolate;
+}
+.cpMapViewport:active {
+  cursor: grabbing;
+}
+.cpMapViewport:focus-visible {
+  outline: 2px solid var(--cp-cyan);
+  outline-offset: 3px;
+}
+.cpMapTransform {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.cpMapTransform > .cpAtlasImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+.cpMapTransform > .cpStreetTile {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+.cpMapTransform .cpMapPin {
+  transform-origin: center;
+}
+.cpPinLabel {
+  display: block;
+  position: absolute;
+  left: 27px;
+  top: -1px;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #06101ded;
+  color: #d1fbff;
+  padding: 4px 8px;
+  border: 1px solid #284551;
+  pointer-events: none;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.cpMapHelp,
+.cpMapAttribution {
+  display: block;
+  padding-top: 10px;
+  line-height: 1.6;
+}
+.cpShell a {
+  color: var(--cp-cyan);
+}
+.cpMapFullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: #081018;
+  padding: 16px;
+  overflow: auto;
+}
+.cpMapFullscreen .cpMapViewport {
+  height: calc(100dvh - 170px);
+  max-height: none;
+}
+.cpPlaceFilters {
+  margin-bottom: 12px;
+}
+.cpPlaceResults {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-height: 190px;
+  overflow: auto;
+  padding: 12px 0;
+}
+.cpPlaceResults button {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+.cpPlaceResults small {
+  opacity: 0.7;
+  font-size: 10px;
+}
+@media (max-width: 700px) {
+  .cpOriginLayout {
+    grid-template-columns: 1fr;
+  }
+  .cpPortraitEditor > img {
+    max-height: 320px;
+  }
+  .cpStarterSummary {
+    align-items: start;
+    gap: 12px;
+  }
+  .cpStarterSummary > img {
+    width: 76px;
+  }
+  .cpMapViewport {
+    height: 58dvh;
+    min-height: 340px;
+  }
+  .cpMapControls {
+    gap: 6px;
+  }
+  .cpMapControls button {
+    padding: 9px;
+  }
+  .cpMapControls select {
+    width: 100%;
+  }
+  .cpMapFullscreen {
+    padding: 8px;
+  }
+  .cpMapFullscreen .cpMapViewport {
+    height: calc(100dvh - 225px);
+  }
+}
+.cpWizard .cpCatalogGrid {
+  max-height: 58dvh;
+  overflow: auto;
+  padding: 8px 4px;
+  overscroll-behavior: contain;
+}

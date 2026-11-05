@@ -2445,7 +2445,7 @@ export default function OracleApp() {
           <div className="campaignLibraryList">
             {orderedCampaigns.map((entry) => {
               const campaignState = entry.state;
-              const portrait = campaignState.character.daggerheart?.image;
+              const portrait = campaignState.character.image || campaignState.character.daggerheart?.image;
               const activity = campaignActivityAt(campaignState);
               const cloudLinked = Boolean(readCloudCredentialsForCampaign(entry.id));
               return (

@@ -1,3 +1,4 @@
+import { mergeNightCityPlaces } from "./cyberpunk/places";
 import type { CyberpunkState } from "./cyberpunk/types";
 import {
   MINUTES_PER_DAY,
@@ -385,6 +386,7 @@ export type CharacterState = {
   permanentHp?: number;
   death?: CharacterDeathState;
   appearance?: string;
+  image?: string;
   daggerheart?: DaggerheartCharacterData;
   progression?: DaggerheartProgressionState;
 };
@@ -433,6 +435,7 @@ export type GameState = {
 
 function cloneWithoutEmbeddedImages(character: CharacterState): CharacterState {
   const next = structuredClone(character) as CharacterState;
+  next.image = undefined;
   if (next.daggerheart) {
     next.daggerheart.image = undefined;
     if (next.daggerheart.animalCompanion) {
@@ -472,7 +475,10 @@ export function ensureGameStateCrafting(state: GameState): GameState {
 const RESOURCE_MODEL_VERSION = 2;
 
 export function ensureGameStateCharacterModel(state: GameState): GameState {
-  if(state.cyberpunk) return state;
+  if(state.cyberpunk) {
+    const places=mergeNightCityPlaces(state.cyberpunk.places,state.cyberpunk.era);
+    return places===state.cyberpunk.places?state:{...state,cyberpunk:{...state.cyberpunk,places}};
+  }
   const sourceClass = state.character.daggerheart?.class?.name || state.character.archetype.split("·")[0]?.trim() || "";
   const level = Math.max(1, Math.min(10, Math.trunc(state.character.level || 1)));
   const stats = classStatsFor(sourceClass);
@@ -737,6 +743,7 @@ export function inferLegacyRestartSnapshot(state: GameState): CampaignRestartSna
 export function restartCampaignFromSnapshot(state: GameState): GameState {
   const snapshot = state.campaign.restartSnapshot || inferLegacyRestartSnapshot(state);
   const character = structuredClone(snapshot.character);
+  character.image = state.character.image;
   if (character.daggerheart && state.character.daggerheart) {
     character.daggerheart.image = state.character.daggerheart.image;
     if (character.daggerheart.animalCompanion && state.character.daggerheart.animalCompanion) {

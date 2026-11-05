@@ -35,6 +35,10 @@ export type Place = {
   y: number;
   era: CyberpunkEra;
   precision: "district" | "landmark" | "custom";
+  category?: string;
+  streetPosition?: { x: number; y: number };
+  mapLayer?: "atlas" | "streets";
+  referenceUrl?: string;
 };
 export type CityEvent = {
   id: string;
@@ -98,6 +102,7 @@ export type CyberpunkState = {
   role: string;
   roleRank: number;
   history: string;
+  preferredQuickhacks?: string[];
   hp: number;
   maxHp: number;
   humanity: number;
