@@ -3,6 +3,7 @@ import "./globals.css";
 import "./equipment.css";
 import "./beastforms.css";
 import "./transformations.css";
+import "./cyberpunk.css";
 
 export const metadata: Metadata = {
   title: "OracleRPG",

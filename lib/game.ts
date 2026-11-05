@@ -1,3 +1,4 @@
+import type { CyberpunkState } from "./cyberpunk/types";
 import {
   MINUTES_PER_DAY,
   createCampaignTimeState,
@@ -239,7 +240,7 @@ export type DaggerheartCharacterData = {
 export type Quest = {
   id: string;
   title: string;
-  status: "active" | "completed";
+  status: "active" | "completed" | "failed";
   stage: string;
   acceptedAtCampaignMinute?: number;
   deadlineCampaignMinute?: number;
@@ -247,6 +248,7 @@ export type Quest = {
 };
 
 export type Npc = {
+  cyberpunk?: {stats:Record<string,number>;hp:number;maxHp:number;armor:{body:number;head:number};injuries:string[]};
   id: string;
   name: string;
   role: string;
@@ -388,6 +390,7 @@ export type CharacterState = {
 };
 
 export type CampaignRestartSnapshot = {
+  cyberpunk?: CyberpunkState;
   createdAt: string;
   campaign: CampaignCore;
   time: CampaignTimeState;
@@ -404,6 +407,7 @@ export type CampaignRestartSnapshot = {
 };
 
 export type GameState = {
+  cyberpunk?: CyberpunkState;
   resourceModelVersion?: number;
   campaign: CampaignCore & {
     restartSnapshot?: CampaignRestartSnapshot;
@@ -442,6 +446,7 @@ export function createCampaignRestartSnapshot(state: GameState): CampaignRestart
   const { restartSnapshot: _restartSnapshot, ...campaign } = state.campaign;
   return {
     createdAt: new Date().toISOString(),
+    ...(state.cyberpunk ? {cyberpunk:structuredClone(state.cyberpunk)} : {}),
     campaign: structuredClone(campaign),
     time: structuredClone(state.time ?? createCampaignTimeState({ seed: `campaign:${state.campaign.name}` })),
     character: cloneWithoutEmbeddedImages(state.character),
@@ -467,6 +472,7 @@ export function ensureGameStateCrafting(state: GameState): GameState {
 const RESOURCE_MODEL_VERSION = 2;
 
 export function ensureGameStateCharacterModel(state: GameState): GameState {
+  if(state.cyberpunk) return state;
   const sourceClass = state.character.daggerheart?.class?.name || state.character.archetype.split("·")[0]?.trim() || "";
   const level = Math.max(1, Math.min(10, Math.trunc(state.character.level || 1)));
   const stats = classStatsFor(sourceClass);
@@ -739,6 +745,7 @@ export function restartCampaignFromSnapshot(state: GameState): GameState {
   }
   return {
     resourceModelVersion: RESOURCE_MODEL_VERSION,
+    ...(snapshot.cyberpunk ? {cyberpunk:structuredClone(snapshot.cyberpunk)} : {}),
     campaign: {
       ...structuredClone(snapshot.campaign),
       restartSnapshot: structuredClone(snapshot),

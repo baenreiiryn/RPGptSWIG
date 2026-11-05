@@ -35,7 +35,10 @@ import { buildCampaignOpeningPrompt, extractNarration, extractRefusal, gmInstruc
 import { runGmTurn } from "@/lib/gmTurn";
 import { buildSceneImagePrompt, buildSceneSnapshot, formatNarrationText, latestGmMessage } from "@/lib/scene";
 import { buildSceneWebImageSearchPrompt, describeSceneWebImageError, extractSceneWebImage } from "@/lib/sceneWebImage";
-import DaggerheartCompendium from "@/components/DaggerheartCompendium";
+import dynamic from "next/dynamic";
+const SystemCompendium = dynamic(() => import("@/components/SystemCompendium"));
+const CampaignSystemPicker = dynamic(() => import("@/components/CampaignSystemPicker"));
+const CyberpunkApp = dynamic(() => import("@/components/CyberpunkApp"));
 import CompendiumArt from "@/components/CompendiumArt";
 import EquipmentArt from "@/components/EquipmentArt";
 import NewCampaignWizard, { type NewCampaignResult } from "@/components/NewCampaignWizard";
@@ -1031,7 +1034,7 @@ export default function OracleApp() {
   }
 
   useEffect(() => {
-    if (!ready || !activeCampaignId || !bridge.account?.connected || !bridge.model) return;
+    if (state.cyberpunk || !ready || !activeCampaignId || !bridge.account?.connected || !bridge.model) return;
     if (!state.messages.some((message) => message.role === "gm")) return;
     if (!timelineNeedsNarrativeSynthesis(state)) return;
     const requestKey = `${activeCampaignId}:${state.timelineVersion ?? 0}:${state.campaign.name}`;
@@ -1115,7 +1118,7 @@ export default function OracleApp() {
   }, [state.messages]);
 
   useEffect(() => {
-    if (!ready || screen !== "campaign" || view !== "session" || !activeCampaignId) return;
+    if (state.cyberpunk || !ready || screen !== "campaign" || view !== "session" || !activeCampaignId) return;
     if (bridge.status !== "ready" || !bridge.account?.connected || !bridge.model || gmBusy || gmRunningRef.current) return;
     if (hasGmNarration) return;
     const key = `${activeCampaignId}:${campaignEpochRef.current}:opening`;
@@ -1135,7 +1138,7 @@ export default function OracleApp() {
 
   useEffect(() => {
     if (bridge.status !== "ready" || !bridge.account?.connected || !bridge.model) return;
-    if (!activeCampaignId || screen !== "campaign" || view !== "session") return;
+    if (stateRef.current.cyberpunk || !activeCampaignId || screen !== "campaign" || view !== "session") return;
     if (hasGmNarration) return;
     const key = `${activeCampaignId}:${campaignEpochRef.current}:opening`;
     if (openingNarrationFailedRef.current !== key) return;
@@ -1146,7 +1149,7 @@ export default function OracleApp() {
   }, [bridge.status, bridge.account?.connected, bridge.model, hasGmNarration]);
 
   useEffect(() => {
-    if (!ready || screen !== "campaign" || view !== "session" || !activeCampaignId) return;
+    if (state.cyberpunk || !ready || screen !== "campaign" || view !== "session" || !activeCampaignId) return;
     if (!bridge.account?.connected || !bridge.model) return;
     if (gmBusy || gmRunningRef.current) return;
     if (!hasGmNarration) return;
@@ -1362,6 +1365,18 @@ export default function OracleApp() {
 
   function characterFromNewCampaignResult(result: NewCampaignResult): CharacterState {
     return structuredClone(result.resolvedCharacter) as CharacterState;
+  }
+
+  function finishCyberpunkCampaign(next: GameState) {
+    next.campaign.restartSnapshot = createCampaignRestartSnapshot(next);
+    const createdAt = new Date().toISOString();
+    const localCampaignId = crypto.randomUUID();
+    const record: CampaignLibraryEntry = {id:localCampaignId,state:next,createdAt,updatedAt:createdAt};
+    const nextLibrary = sortCampaigns([...campaignsRef.current,record]);
+    campaignsRef.current=nextLibrary;setCampaigns(nextLibrary);writeCampaignLibrary(nextLibrary);
+    localStorage.setItem(ACTIVE_CAMPAIGN_KEY,localCampaignId);campaignEpochRef.current+=1;
+    activeCampaignIdRef.current=localCampaignId;stateRef.current=next;
+    setActiveCampaignId(localCampaignId);setState(next);setView("session");setScreen("campaign");
   }
 
   async function finishNewCampaign(result: NewCampaignResult) {
@@ -2557,6 +2572,7 @@ export default function OracleApp() {
 
   if (screen === "newCampaign") {
     const replacing = Boolean(replacementCampaignId);
+    if (!replacing) return <CampaignSystemPicker ai={newCampaignAi} onBack={goHome} onDaggerheart={finishNewCampaign} onCyberpunk={finishCyberpunkCampaign} />;
     const replacementState = replacementCampaignId
       ? campaignsRef.current.find((entry) => entry.id === replacementCampaignId)?.state || stateRef.current
       : null;
@@ -2581,7 +2597,7 @@ export default function OracleApp() {
   }
 
   if (screen === "compendium") {
-    return <DaggerheartCompendium onBack={goHome} />;
+    return <SystemCompendium onBack={goHome} />;
   }
 
   if (screen === "diceAppearance") {
@@ -2685,6 +2701,8 @@ export default function OracleApp() {
       </main>
     );
   }
+
+  if (state.cyberpunk) return <CyberpunkApp key={activeCampaignId || "cyberpunk"} state={state} onChange={(next)=>{stateRef.current=next;setState(next);}} onHome={goHome} onSettings={()=>setScreen("settings")} ai={newCampaignAi} cloudLabel={cloudLabel} />;
 
   const chatConnectionLabel = bridge.account?.connected ? "conectado" : bridge.status === "missing" ? "bridge offline" : "conectar";
   const campaignControls = (

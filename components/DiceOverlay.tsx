@@ -18,10 +18,13 @@ import {
   vendorColorSet,
 } from "@/lib/diceBoxAppearance";
 
+import {withEdgerunnersFaces} from "@/lib/cyberpunk/diceFaces";
+
 type DiceBoxInstance = InstanceType<(typeof import("@3d-dice/dice-box-threejs"))["default"]>;
 
 export type DiceOverlayProps = {
   result: DiceRollResult | null;
+  faceSet?: "edgerunners";
   appearances?: DiceAppearanceOverrides;
   appearance?: DiceAppearanceRole;
   lingerMs?: number;
@@ -35,6 +38,7 @@ function asError(error: unknown) {
 
 export default function DiceOverlay({
   result,
+  faceSet,
   appearances,
   appearance,
   lingerMs = 1000,
@@ -171,7 +175,8 @@ export default function DiceOverlay({
           const laneAppearance = appearanceForRole(lane.role);
           const renderedNotation = applyDiceFacePresetToNotation(lane.roll.notation, laneAppearance.preset);
           const forcedNotation = `${renderedNotation}@${lane.roll.outcomes.join(",")}`;
-          await box.roll(forcedNotation);
+          if(faceSet === "edgerunners") await withEdgerunnersFaces(box.DiceFactory, () => box.roll(forcedNotation));
+          else await box.roll(forcedNotation);
         });
         if (sequence !== playSequenceRef.current) return;
 
@@ -191,7 +196,7 @@ export default function DiceOverlay({
     return () => {
       if (sequence === playSequenceRef.current) playSequenceRef.current += 1;
     };
-  }, [appearance, containerBaseId, result?.id, resolvedAppearancesSignature]);
+  }, [appearance, faceSet, containerBaseId, result?.id, resolvedAppearancesSignature]);
 
   useEffect(() => () => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
