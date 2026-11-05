@@ -26,7 +26,7 @@ No Timeline Builder source code, templates, styles, images, or other assets are 
 
 ## Cyberpunk campaign reference material
 
-Cyberpunk reference records, maps, illustrations and d6/d10 dice faces were imported from the user-provided `edgerunners-mission-kit-v11FVTT.zip`. The archive metadata identifies R. Talsorian Games and Schism for the Foundry v11 Edgerunners module (v1.1.0); the exported world references Cyberpunk RED Core v0.88.2. Individual imported records retain their original book/page references where available.
+Cyberpunk reference records, maps, illustrations and dice faces (d2, d4, d6, d8, d10, d12, d20 and percentile) were imported from the user-provided `edgerunners-mission-kit-v11FVTT.zip`. The archive metadata identifies R. Talsorian Games and Schism for the Foundry v11 Edgerunners module (v1.1.0); the exported world references Cyberpunk RED Core v0.88.2. Individual imported records retain their original book/page references where available.
 
 Cyberpunk RED, Cyberpunk Edgerunners and their associated artwork and names remain the property of their respective rights holders. Importing this material does not transfer ownership or grant a new redistribution license. These notices do not represent permission from those rights holders.
 

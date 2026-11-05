@@ -8,7 +8,7 @@ A importação reproduzível em `scripts/import-cyberpunk.py` lê o arquivo forn
 
 O mundo Foundry exportado tem ambientação em 2055 e referencia Cyberpunk RED Core v0.88.2. Suas fichas são modelos opcionais para o Mestre adaptar à campanha, sem importar automaticamente sua trama. Contas, macros, históricos de conversa e jornais privados não são importados.
 
-O visual reutiliza seis recortes do atlas cibernético já gerado, mapas e ilustrações do material fornecido. Dezesseis faces de dados d6/d10 do pacote Edgerunners são usadas no rolador.
+O visual reutiliza seis recortes do atlas cibernético já gerado, mapas e ilustrações do material fornecido. As 72 faces coloridas do pacote Edgerunners estão disponíveis como textura e tema selecionáveis, incluindo d2, d4, d6, d8, d10, d12, d20 e percentuais.
 
 ## Fluxos implementados
 
@@ -30,7 +30,7 @@ O mapa de 2045 traz os 43 pontos numerados da fonte. O de 2077 inicia com 17 mar
 ## Verificação
 
 - `npm run lint` e `npm run build`: aprovados.
-- Suíte completa: 216 testes aprovados, incluindo 29 testes Cyberpunk.
+- Suíte completa: 223 testes aprovados, incluindo 29 testes Cyberpunk.
 - Navegador com ponte do Mestre simulada: criação em 2045/2077, pedido de rolagem e continuação, importação de contato, mapas, endereços, memória, persistência e fechamento do rolador.
 - Larguras verificadas: 1440, 390 e 320 pixels; sem erros JavaScript ou transbordamento horizontal da página. Integração real com o provedor do Mestre depende da conexão já configurada pelo usuário.
 
@@ -51,3 +51,9 @@ Endereços antigos permanecem vinculados ao atlas. Novos endereços marcados na 
 A atualização de locais preserva a identidade do estado quando não há novos dados, evitando ciclos de normalização e sobrescrita de edições. O teste de regressão cobre campanhas novas e migração de campanhas antigas.
 
 Verificação desta extensão: 216 testes, TypeScript e build de produção (`npm run build -- --webpack`) aprovados. O navegador verificou retrato/análise/história com IA simulada, escolha de quickhacks, zoom/arraste/pinça real, endereços após transformações, memória e reabertura nas larguras 1440/390/320 px. Os tiles reais foram repassados pelo proxy do ambiente de teste; falha simulada da camada externa confirmou o retorno ao atlas sem perda dos dados.
+
+## Aparência dos dados Edgerunners
+
+Em Configurações → Aparência dos dados, o conjunto aparece em Temas e Texturas como Edgerunners. A seleção é salva por categoria (Normal, Esperança ou Medo, quando aplicável) e usada na prévia 3D e nas rolagens. Cyberpunk mantém esse conjunto como padrão, mas passa a respeitar a textura escolhida pelo usuário. As imagens incluem suas próprias cores e símbolos; o maior valor usa o emblema Edgerunners. A adaptação preserva os valores lógicos, a leitura dos vértices do d4 e o zero percentual, sem mudar os resultados. Testes da extensão: 223 aprovados.
+
+A prévia foi conferida em todos os oito formatos, incluindo o par d100/d10, com as 72 imagens locais carregadas sem erros; seleção, recarga e troca de textura foram verificadas em desktop/celular. A sessão Cyberpunk foi conferida com uma textura comum e depois com Edgerunners, usando a preferência salva.

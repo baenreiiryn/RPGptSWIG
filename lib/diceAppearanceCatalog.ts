@@ -17,6 +17,7 @@ export type DiceCatalogOption<T extends string> = {
 
 export type DiceTextureOption = DiceCatalogOption<string> & {
   materialHint?: DiceMaterial;
+  previewAsset?: string;
 };
 
 export type DiceFontOption = DiceCatalogOption<string> & {
@@ -52,6 +53,13 @@ export type DiceEngineFont = "Georgia" | "Times New Roman" | "Arial" | "Trebuche
 export const DICE_ENGINE_SUPPORTS_CUSTOM_NUMBER_FONT = true;
 
 export const DICE_TEXTURES = [
+  {
+    id: "edgerunners",
+    label: "Edgerunners",
+    description: "Faces originais amarelas e verdes do pacote Edgerunners, do d2 ao d20 e percentuais.",
+    materialHint: "plastic",
+    previewAsset: "/cyberpunk/dice/d6-6.webp",
+  },
   { id: "none", label: "Sem textura", description: "Cor sólida, sem textura aplicada." },
   { id: "cloudy", label: "Nuvens translúcidas", description: "Nuvens suaves com recorte translúcido." },
   { id: "cloudy_2", label: "Nuvens", description: "Nuvens mescladas sobre a cor do dado." },
@@ -200,6 +208,16 @@ export const DICE_SURFACES = [
 ] as const satisfies readonly DiceSurfaceOption[];
 
 export const DICE_THEME_PRESETS = [
+  {
+    id: "edgerunners",
+    label: "Edgerunners",
+    description: "Conjunto original do ZIP, com faces amarelas e símbolos verdes.",
+    fontId: "clean-sans",
+    appearance: {
+      foreground: "#32c92a", background: "#f0dc00", outline: "#32c92a", edge: "#f0dc00",
+      texture: "edgerunners", material: "plastic", preset: "standard",
+    },
+  },
   {
     id: "oracle",
     label: "Oracle",

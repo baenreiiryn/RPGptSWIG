@@ -83,6 +83,7 @@ import {
   writeCampaignLibrary,
 } from "@/lib/campaignLibrary";
 import DiceOverlay from "@/components/DiceOverlay";
+import { cyberpunkDiceAppearances } from "@/lib/edgerunnersDice";
 import DiceAppearanceSettings from "@/components/DiceAppearanceSettings";
 import CampaignTimeline from "@/components/CampaignTimeline";
 import CraftingWorkshop, { type CraftingWorkshopSlot } from "@/components/CraftingWorkshop";
@@ -2604,7 +2605,7 @@ export default function OracleApp() {
     return (
       <DiceAppearanceSettings
         daggerheart={state.campaign.system === "Daggerheart"}
-        appearances={diceAppearances}
+        appearances={state.cyberpunk ? cyberpunkDiceAppearances(diceAppearances) : diceAppearances}
         onChange={updateDiceAppearances}
         onBack={() => setScreen("settings")}
       />
@@ -2702,7 +2703,7 @@ export default function OracleApp() {
     );
   }
 
-  if (state.cyberpunk) return <CyberpunkApp key={activeCampaignId || "cyberpunk"} state={state} onChange={(next)=>{stateRef.current=next;setState(next);}} onHome={goHome} onSettings={()=>setScreen("settings")} ai={newCampaignAi} cloudLabel={cloudLabel} />;
+  if (state.cyberpunk) return <CyberpunkApp key={activeCampaignId || "cyberpunk"} state={state} onChange={(next)=>{stateRef.current=next;setState(next);}} onHome={goHome} onSettings={()=>setScreen("settings")} ai={newCampaignAi} cloudLabel={cloudLabel} diceAppearances={diceAppearances} />;
 
   const chatConnectionLabel = bridge.account?.connected ? "conectado" : bridge.status === "missing" ? "bridge offline" : "conectar";
   const campaignControls = (

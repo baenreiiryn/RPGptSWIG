@@ -18,13 +18,17 @@ import {
   vendorColorSet,
 } from "@/lib/diceBoxAppearance";
 
-import {withEdgerunnersFaces} from "@/lib/cyberpunk/diceFaces";
+import {
+  diceEngineTexture,
+  rollWithDiceFaceTexture,
+} from "@/lib/edgerunnersDice";
 
-type DiceBoxInstance = InstanceType<(typeof import("@3d-dice/dice-box-threejs"))["default"]>;
+type DiceBoxInstance = InstanceType<
+  (typeof import("@3d-dice/dice-box-threejs"))["default"]
+>;
 
 export type DiceOverlayProps = {
   result: DiceRollResult | null;
-  faceSet?: "edgerunners";
   appearances?: DiceAppearanceOverrides;
   appearance?: DiceAppearanceRole;
   lingerMs?: number;
@@ -38,7 +42,6 @@ function asError(error: unknown) {
 
 export default function DiceOverlay({
   result,
-  faceSet,
   appearances,
   appearance,
   lingerMs = 1000,
@@ -47,9 +50,15 @@ export default function DiceOverlay({
 }: DiceOverlayProps) {
   const reactId = useId();
   const containerBaseId = `oracle-dice-overlay-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const boxRefs = useRef<Partial<Record<DiceAppearanceRole, DiceBoxInstance>>>({});
-  const boxPromiseRefs = useRef<Partial<Record<DiceAppearanceRole, Promise<DiceBoxInstance>>>>({});
-  const appliedAppearanceRefs = useRef<Partial<Record<DiceAppearanceRole, string>>>({});
+  const boxRefs = useRef<Partial<Record<DiceAppearanceRole, DiceBoxInstance>>>(
+    {},
+  );
+  const boxPromiseRefs = useRef<
+    Partial<Record<DiceAppearanceRole, Promise<DiceBoxInstance>>>
+  >({});
+  const appliedAppearanceRefs = useRef<
+    Partial<Record<DiceAppearanceRole, string>>
+  >({});
   const playSequenceRef = useRef(0);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onCompleteRef = useRef(onComplete);
@@ -60,8 +69,14 @@ export default function DiceOverlay({
   const normalAppearance = resolveDiceAppearance("normal", appearances);
   const resolvedAppearances = {
     normal: normalAppearance,
-    hope: { ...resolveDiceAppearance("hope", appearances), font: normalAppearance.font },
-    fear: { ...resolveDiceAppearance("fear", appearances), font: normalAppearance.font },
+    hope: {
+      ...resolveDiceAppearance("hope", appearances),
+      font: normalAppearance.font,
+    },
+    fear: {
+      ...resolveDiceAppearance("fear", appearances),
+      font: normalAppearance.font,
+    },
   };
   const resolvedAppearancesSignature = diceAppearanceSignature({
     ...resolvedAppearances.normal,
@@ -108,7 +123,10 @@ export default function DiceOverlay({
       return `${containerBaseId}-${role}`;
     }
 
-    async function ensureBox(role: DiceAppearanceRole, initialAppearance: DiceAppearance) {
+    async function ensureBox(
+      role: DiceAppearanceRole,
+      initialAppearance: DiceAppearance,
+    ) {
       const existing = boxRefs.current[role];
       if (existing) return existing;
       const pending = boxPromiseRefs.current[role];
@@ -123,7 +141,7 @@ export default function DiceOverlay({
           theme_surface: initialAppearance.surface,
           theme_customColorset: vendorColorSet(initialAppearance),
           theme_colorset: "white",
-          theme_texture: initialAppearance.texture,
+          theme_texture: diceEngineTexture(initialAppearance.texture),
           theme_material: initialAppearance.material,
           gravity_multiplier: 430,
           light_intensity: 0.85,
@@ -133,7 +151,8 @@ export default function DiceOverlay({
         await box.initialize();
         applyDiceBoxFont(box, initialAppearance.font);
         boxRefs.current[role] = box;
-        appliedAppearanceRefs.current[role] = diceAppearanceSignature(initialAppearance);
+        appliedAppearanceRefs.current[role] =
+          diceAppearanceSignature(initialAppearance);
         return box;
       })();
       boxPromiseRefs.current[role] = promise;
@@ -146,7 +165,11 @@ export default function DiceOverlay({
       }
     }
 
-    async function applyAppearance(role: DiceAppearanceRole, box: DiceBoxInstance, nextAppearance: DiceAppearance) {
+    async function applyAppearance(
+      role: DiceAppearanceRole,
+      box: DiceBoxInstance,
+      nextAppearance: DiceAppearance,
+    ) {
       const nextSignature = diceAppearanceSignature(nextAppearance);
       if (appliedAppearanceRefs.current[role] === nextSignature) return;
       await applyDiceBoxAppearance(box, nextAppearance);
@@ -160,23 +183,35 @@ export default function DiceOverlay({
 
         Object.values(boxRefs.current).forEach((box) => box?.clearDice());
 
-        const prepared = await Promise.all(plan.map(async (lane) => {
-          const laneAppearance = appearanceForRole(lane.role);
-          const box = await ensureBox(lane.role, laneAppearance);
-          await applyAppearance(lane.role, box, laneAppearance);
-          return { lane, box };
-        }));
+        const prepared = await Promise.all(
+          plan.map(async (lane) => {
+            const laneAppearance = appearanceForRole(lane.role);
+            const box = await ensureBox(lane.role, laneAppearance);
+            await applyAppearance(lane.role, box, laneAppearance);
+            return { lane, box };
+          }),
+        );
         if (sequence !== playSequenceRef.current) return;
 
-        const boxesByRole = new Map(prepared.map(({ lane, box }) => [lane.role, box]));
+        const boxesByRole = new Map(
+          prepared.map(({ lane, box }) => [lane.role, box]),
+        );
         await runDiceBoxRenderPlan(plan, async (lane) => {
           const box = boxesByRole.get(lane.role);
-          if (!box) throw new Error(`Dice box lane ${lane.role} was not initialized.`);
+          if (!box)
+            throw new Error(`Dice box lane ${lane.role} was not initialized.`);
           const laneAppearance = appearanceForRole(lane.role);
-          const renderedNotation = applyDiceFacePresetToNotation(lane.roll.notation, laneAppearance.preset);
+          const renderedNotation = applyDiceFacePresetToNotation(
+            lane.roll.notation,
+            laneAppearance.preset,
+          );
           const forcedNotation = `${renderedNotation}@${lane.roll.outcomes.join(",")}`;
-          if(faceSet === "edgerunners") await withEdgerunnersFaces(box.DiceFactory, () => box.roll(forcedNotation));
-          else await box.roll(forcedNotation);
+          await rollWithDiceFaceTexture(
+            box.DiceFactory,
+            laneAppearance.texture,
+            renderedNotation,
+            () => box.roll(forcedNotation),
+          );
         });
         if (sequence !== playSequenceRef.current) return;
 
@@ -196,15 +231,18 @@ export default function DiceOverlay({
     return () => {
       if (sequence === playSequenceRef.current) playSequenceRef.current += 1;
     };
-  }, [appearance, faceSet, containerBaseId, result?.id, resolvedAppearancesSignature]);
+  }, [appearance, containerBaseId, result?.id, resolvedAppearancesSignature]);
 
-  useEffect(() => () => {
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    Object.values(boxRefs.current).forEach((box) => box?.clearDice());
-    boxRefs.current = {};
-    boxPromiseRefs.current = {};
-    appliedAppearanceRefs.current = {};
-  }, []);
+  useEffect(
+    () => () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      Object.values(boxRefs.current).forEach((box) => box?.clearDice());
+      boxRefs.current = {};
+      boxPromiseRefs.current = {};
+      appliedAppearanceRefs.current = {};
+    },
+    [],
+  );
 
   return (
     <div
@@ -227,7 +265,12 @@ export default function DiceOverlay({
         <div
           id={`${containerBaseId}-${role}`}
           key={role}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+          }}
         />
       ))}
     </div>

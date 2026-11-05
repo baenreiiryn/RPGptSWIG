@@ -1,3 +1,4 @@
+import { diceEngineTexture } from "./edgerunnersDice";
 import type { DiceAppearance } from "@/lib/dice";
 
 type DiceFactoryLike = {
@@ -8,12 +9,26 @@ type DiceFactoryLike = {
 export type DiceBoxAppearanceTarget = {
   DiceFactory: DiceFactoryLike;
   theme_customColorset: Record<string, unknown> | null;
-  loadTheme(config: { colorset?: string; texture?: string; material?: string }): Promise<void>;
+  loadTheme(config: {
+    colorset?: string;
+    texture?: string;
+    material?: string;
+  }): Promise<void>;
 };
 
 const FONT_AWARE_DICE_TYPES = [
-  "d2", "d4", "d6", "d8", "d10", "d12", "d20", "d100",
-  "dpip", "dpoker", "dspanpoker", "dsuit",
+  "d2",
+  "d4",
+  "d6",
+  "d8",
+  "d10",
+  "d12",
+  "d20",
+  "d100",
+  "dpip",
+  "dpoker",
+  "dspanpoker",
+  "dsuit",
 ] as const;
 
 function hashText(value: string) {
@@ -29,8 +44,12 @@ export function diceAppearanceSignature(appearance: DiceAppearance) {
   return JSON.stringify(appearance);
 }
 
-export function vendorColorSet(appearance: DiceAppearance, namespace = "oracle") {
-  const engineMaterial = appearance.material === "plastic" ? "none" : appearance.material;
+export function vendorColorSet(
+  appearance: DiceAppearance,
+  namespace = "oracle",
+) {
+  const engineMaterial =
+    appearance.material === "plastic" ? "none" : appearance.material;
   return {
     name: `${namespace}-${hashText(diceAppearanceSignature(appearance))}`,
     description: appearance.name,
@@ -39,12 +58,15 @@ export function vendorColorSet(appearance: DiceAppearance, namespace = "oracle")
     background: appearance.background,
     outline: appearance.outline,
     edge: appearance.edge,
-    texture: appearance.texture,
+    texture: diceEngineTexture(appearance.texture),
     material: engineMaterial,
   };
 }
 
-export function applyDiceBoxFont(target: DiceBoxAppearanceTarget, font: string) {
+export function applyDiceBoxFont(
+  target: DiceBoxAppearanceTarget,
+  font: string,
+) {
   for (const type of FONT_AWARE_DICE_TYPES) {
     target.DiceFactory.get(type).font = font;
   }
@@ -60,7 +82,7 @@ export async function applyDiceBoxAppearance(
   target.theme_customColorset = vendorColorSet(appearance, namespace);
   await target.loadTheme({
     colorset: "white",
-    texture: appearance.texture,
+    texture: diceEngineTexture(appearance.texture),
     material: appearance.material === "plastic" ? "none" : appearance.material,
   });
 }

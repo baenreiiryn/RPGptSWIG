@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import {registerHooks} from "node:module";
+registerHooks({resolve(s,c,next){if(s.startsWith("./") && !/\.[a-z0-9]+$/i.test(s))return next(s+".ts",c);return next(s,c);}});
 
 const appearanceHelpers = await import("../lib/diceBoxAppearance.ts");
 
@@ -62,4 +64,11 @@ test("plastic UI material maps to the engine's plastic/none material", async () 
   await appearanceHelpers.applyDiceBoxAppearance(target, { ...APPEARANCE, material: "plastic" }, "test");
   assert.equal(target.theme_customColorset.material, "none");
   assert.equal(target.loadedTheme.material, "none");
+});
+
+test('Edgerunners face artwork uses the engine neutral texture instead of an unknown vendor id', async()=>{
+ const {target}=mockTarget();
+ await appearanceHelpers.applyDiceBoxAppearance(target,{...APPEARANCE,texture:'edgerunners'});
+ assert.equal(target.loadedTheme.texture,'none');
+ assert.equal(target.theme_customColorset.texture,'none');
 });

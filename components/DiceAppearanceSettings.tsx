@@ -59,7 +59,7 @@ function presetSwatch(preset: (typeof DICE_THEME_PRESETS)[number], role: DiceApp
   };
   const background = patch.background ?? DEFAULT_DICE_APPEARANCES[role].background;
   const colors = Array.isArray(background) ? background : [background];
-  return `linear-gradient(135deg, ${colors.join(", ")})`;
+  return colors.length === 1 ? colors[0] : `linear-gradient(135deg, ${colors.join(", ")})`;
 }
 
 export type DiceAppearanceSettingsProps = {
@@ -234,7 +234,7 @@ export default function DiceAppearanceSettings({
                     type="button"
                     className={current.preset === preset.id ? "active" : ""}
                     onClick={() => {
-                      updateRole({ preset: preset.id as DiceFacePreset });
+                      updateRole({ preset: preset.id as DiceFacePreset,...(current.texture==="edgerunners" && preset.id!=="standard"?{texture:"none"}:{}) });
                       if (preset.id !== "standard") {
                         const firstCompatible = compatibleWith[0];
                         const sides = Number(firstCompatible.replace("d", "")) as DieSides;
@@ -261,17 +261,19 @@ export default function DiceAppearanceSettings({
                 <div><small>SUPERFÍCIE DO DADO</small><strong>Texturas</strong></div>
                 <span>{DICE_TEXTURES.length}</span>
               </div>
+              {current.texture === "edgerunners" && <p className="diceConfigHelp">O pacote tem cores e símbolos próprios. O símbolo Edgerunners representa o maior valor do dado.</p>}
               <div className="diceTextureGrid">
                 {DICE_TEXTURES.map((texture) => {
                   const typedTexture = texture as DiceTextureOption;
                   const selected = current.texture === texture.id;
-                  const image = texturePreviewAsset(texture.id);
+                  const image = typedTexture.previewAsset ?? texturePreviewAsset(texture.id);
                   return (
                     <button
                       type="button"
                       className={selected ? "active" : ""}
                       onClick={() => updateRole({
                         texture: texture.id,
+                        ...(texture.id === "edgerunners" ? {preset:"standard" as DiceFacePreset} : {}),
                         ...(typedTexture.materialHint ? { material: typedTexture.materialHint } : {}),
                       })}
                       title={texture.description}

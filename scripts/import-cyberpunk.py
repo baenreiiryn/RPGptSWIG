@@ -46,9 +46,10 @@ for k,v in actorrows:
  if re.fullmatch('!actors![^!]+',k) and v.get('type') in ['mook','character','demon','blackIce']:
   s=v.get('system',{});actors.append(dict(id=v['_id'],name=v['name'],type=v['type'],stats=s.get('stats',{}),role=s.get('roleInfo',{}).get('activeRole',''),art=art(v.get('img','')),hp=s.get('derivedStats',{}).get('hp',{})))
 (repo/'lib/cyberpunk/actors.generated.json').write_text(json.dumps(actors,ensure_ascii=False,separators=(',',':')))
-# Only the d6/d10 faces used by RED; additional faces may be added without regeneration.
-for sides in [6,10]:
- for n in range(1,sides+1):
+# Original colored faces for every supported die; files suffixed b are bump maps.
+for sides in [2,4,6,8,10,12,20,100]:
+ for face in range(1,(10 if sides==100 else sides)+1):
+  n=face*10 if sides==100 else face
   p=root/'Edgerunners Dice'/f'd{sides}-{n}.webp';d=dest/'dice';d.mkdir(exist_ok=True);shutil.copyfile(p,d/p.name)
 im=Image.open(root/'Cyberpunk Edgerunners Mission Kit Digital/Individual Maps/CEMK Night City Map.jpg');im.thumbnail((2200,3000));im.save(dest/'night-city-2077.webp',quality=88)
 doc=fitz.open(root/'Icones/Cyberpunk Red.pdf');page=doc[310];image=max(page.get_images(full=True),key=lambda i:i[2]*i[3]);pix=fitz.Pixmap(doc,image[0]);pix=fitz.Pixmap(fitz.csRGB,pix) if pix.colorspace.n!=3 else pix;pix.save(str(dest/'night-city-2045.png'))

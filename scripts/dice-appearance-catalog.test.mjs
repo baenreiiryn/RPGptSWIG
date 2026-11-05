@@ -45,6 +45,7 @@ test("every texture in the catalog has the static asset required by the 3D engin
   };
   for (const texture of catalog.DICE_TEXTURES) {
     const asset = assetName(texture.id);
+    if(texture.previewAsset){assert.ok(fs.existsSync(path.join(process.cwd(),"public",texture.previewAsset)));continue;}
     if (!asset) continue;
     assert.ok(
       fs.existsSync(path.join(process.cwd(), "public", "textures", asset)),
@@ -100,4 +101,12 @@ test("applyPresetToRole updates only the selected role without mutating settings
   assert.equal(next.fear.texture, "marble");
   assert.equal(next.fear.material, "glass");
   assert.notDeepEqual(next.fear.background, source.fear.background);
+});
+
+test('Edgerunners can be selected as a saved texture or complete theme',()=>{
+  assert.ok(catalog.DICE_TEXTURES.some(t=>t.id==='edgerunners'));
+  const preset=catalog.getDiceThemePreset('edgerunners');assert.ok(preset);
+  const chosen=catalog.applyPresetToRole({},'hope',preset);
+  assert.equal(dice.resolveDiceAppearance('hope',JSON.parse(JSON.stringify(chosen))).texture,'edgerunners');
+  assert.equal(chosen.normal.texture,'none');
 });

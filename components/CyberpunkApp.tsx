@@ -12,7 +12,8 @@ import { withCyberState, installCyberware } from "@/lib/cyberpunk/state";
 import { finishHack } from "@/lib/cyberpunk/hacking";
 import { runCyberTurn } from "@/lib/cyberpunk/gm";
 import { visualCyberRoll } from "@/lib/cyberpunk/diceFaces";
-import type { DiceRollResult } from "@/lib/dice";
+import { cyberpunkDiceAppearances } from "@/lib/edgerunnersDice";
+import type { DiceAppearanceOverrides, DiceRollResult } from "@/lib/dice";
 import DiceOverlay from "./DiceOverlay";
 import CyberpunkCharacter from "./CyberpunkCharacter";
 import CyberpunkNetPanel from "./CyberpunkNetPanel";
@@ -41,6 +42,7 @@ export default function CyberpunkApp({
   onSettings,
   ai,
   cloudLabel,
+  diceAppearances,
 }: {
   state: GameState;
   onChange: (g: GameState) => void;
@@ -48,6 +50,7 @@ export default function CyberpunkApp({
   onSettings: () => void;
   ai: NewCampaignAiAdapter;
   cloudLabel: string;
+  diceAppearances?: DiceAppearanceOverrides;
 }) {
   const cp = state.cyberpunk!;
   const [view, setView] = useState<View>("session"),
@@ -700,21 +703,7 @@ export default function CyberpunkApp({
       </fieldset>
       <DiceOverlay
         result={roll}
-        faceSet="edgerunners"
-        appearances={{
-          normal: {
-            name: "Edgerunners",
-            foreground: "#ffec3d",
-            background: "#07171a",
-            edge: "#f53d54",
-            outline: "#000000",
-            material: "plastic",
-            texture: "none",
-            surface: "cyberpunk",
-            font: "Arial",
-            preset: "standard",
-          },
-        }}
+        appearances={cyberpunkDiceAppearances(diceAppearances)}
       />
     </main>
   );
