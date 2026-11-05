@@ -1,9 +1,216 @@
-import type {CyberpunkState,CyberPendingRoll,CyberRoll} from './types';
-import {netActionsPerTurn,woundPenalty} from './rules';
-export const QUICKHACKS=[{id:'impair',name:'Prejudicar Movimento',dv:6,rank:1,description:'MOVE −1 por 60 segundos.'},{id:'sonic',name:'Choque Sônico',dv:6,rank:1,description:'Ouvido Danificado por 60 s, sem dano adicional.'},{id:'overheat',name:'Superaquecimento',dv:8,rank:2,description:'Em chamas: 4 PV diretos ao fim do turno até apagar com uma ação.'},{id:'short',name:'Curto-Circuito',dv:8,rank:2,description:'Mestre escolhe três opções de cyberware desativadas por 60 s; consulte as exclusões.'},{id:'malfunction',name:'Mau Funcionamento',dv:10,rank:3,description:'Escolha um cyberware para desativar por 60 s; Neuroport e Cyberdeck Port são excluídos.'},{id:'lure',name:'Atrair',dv:10,rank:3,description:'Controla o próximo movimento de alvo desavisado, sem perigo evidente. Não alerta.'},{id:'slow',name:'Lentidão',dv:10,rank:3,description:'MOVE −1d6 por 60 s. Determine o d6 separadamente.'},{id:'synapse',name:'Queima de Sinapse',dv:10,rank:3,description:'3d6 PV diretos, ignora armadura sem ablação.'},{id:'puppet',name:'Marionete',dv:12,rank:4,description:'Controla ação e movimento do próximo turno, usando atributos e perícias do alvo.'},{id:'shard',name:'Ejetar Fragmento',dv:12,rank:4,description:'Ejeta um chipware. Tampas de slot impedem a ejeção.'},{id:'reset',name:'Reiniciar Sistema',dv:12,rank:4,description:'Inconsciente e Caído por 60 s ou até sofrer dano.'}] as const;
-export function requestHack(s:CyberpunkState,targetId:string,action:'jack'|'breach'|'quickhack',minute:number,quickhackId?:string):CyberPendingRoll{
- const t=s.net.targets.find(t=>t.id===targetId);if(s.era!==2077)throw Error('Quickhacks de Neuroport pertencem a 2077.');if(s.role!=='Netrunner')throw Error('Ação exige Interface de Netrunner.');if(!s.inventory.some(i=>i.type==='cyberdeck'))throw Error('É necessário um cyberdeck compatível.');if(!s.inventory.some(i=>i.installed&&i.name==='Neuroport Cyberdeck Port'))throw Error('Instale um Neuroport Cyberdeck Port.');if(s.net.meatAction||s.net.actionsUsed>=netActionsPerTurn(s.roleRank))throw Error('Ações NET esgotadas.');if(!t||!t.neuroport||t.distance>50||!t.visible)throw Error('O alvo precisa de Neuroport, visão e distância até 50 m.');if((t.blockedUntil??0)>minute)throw Error('Aguarde 60 minutos após expulsão.');if(action==='jack'&&t.connected)throw Error('Já conectado.');if(action!=='jack'&&!t.connected)throw Error('Conecte ao alvo primeiro.');if(action==='breach'&&t.breached>=t.selfIce)throw Error('Nenhuma Passwall pendente.');const h=QUICKHACKS.find(h=>h.id===quickhackId);if(action==='quickhack'){if(t.breached<t.selfIce)throw Error('Atravesse todas as Passwalls.');if(t.lastHackTurn===s.net.turn)throw Error('Uma tentativa de quickhack por alvo e turno.');if(!h||s.roleRank<h.rank)throw Error('Quickhack indisponível.');if(h.id==='lure'&&t.aware)throw Error('Atrair exige alvo desavisado.');}return {id:crypto.randomUUID(),label:action==='jack'?'Jack In':action==='breach'?'Breach':h!.name,kind:'interface',modifier:s.roleRank+woundPenalty(s,minute),target:action==='breach'?4+2*t.selfIce:action==='quickhack'?h!.dv:undefined,targetId,netAction:action,quickhackId};
+import type { CyberpunkState, CyberPendingRoll, CyberRoll } from "./types";
+import { netActionsPerTurn, woundPenalty } from "./rules";
+export const QUICKHACKS = [
+  {
+    id: "impair",
+    name: "Prejudicar Movimento",
+    dv: 6,
+    rank: 1,
+    description: "MOVE −1 por 60 segundos.",
+  },
+  {
+    id: "sonic",
+    name: "Choque Sônico",
+    dv: 6,
+    rank: 1,
+    description: "Ouvido Danificado por 60 s, sem dano adicional.",
+  },
+  {
+    id: "overheat",
+    name: "Superaquecimento",
+    dv: 8,
+    rank: 2,
+    description:
+      "Em chamas: 4 PV diretos ao fim do turno até apagar com uma ação.",
+  },
+  {
+    id: "short",
+    name: "Curto-Circuito",
+    dv: 8,
+    rank: 2,
+    description:
+      "Mestre escolhe três opções de cyberware desativadas por 60 s; consulte as exclusões.",
+  },
+  {
+    id: "malfunction",
+    name: "Mau Funcionamento",
+    dv: 10,
+    rank: 3,
+    description:
+      "Escolha um cyberware para desativar por 60 s; Neuroport e Cyberdeck Port são excluídos.",
+  },
+  {
+    id: "lure",
+    name: "Atrair",
+    dv: 10,
+    rank: 3,
+    description:
+      "Controla o próximo movimento de alvo desavisado, sem perigo evidente. Não alerta.",
+  },
+  {
+    id: "slow",
+    name: "Lentidão",
+    dv: 10,
+    rank: 3,
+    description: "MOVE −1d6 por 60 s. Determine o d6 separadamente.",
+  },
+  {
+    id: "synapse",
+    name: "Queima de Sinapse",
+    dv: 10,
+    rank: 3,
+    description: "3d6 PV diretos, ignora armadura sem ablação.",
+  },
+  {
+    id: "puppet",
+    name: "Marionete",
+    dv: 12,
+    rank: 4,
+    description:
+      "Controla ação e movimento do próximo turno, usando atributos e perícias do alvo.",
+  },
+  {
+    id: "shard",
+    name: "Ejetar Fragmento",
+    dv: 12,
+    rank: 4,
+    description: "Ejeta um chipware. Tampas de slot impedem a ejeção.",
+  },
+  {
+    id: "reset",
+    name: "Reiniciar Sistema",
+    dv: 12,
+    rank: 4,
+    description: "Inconsciente e Caído por 60 s ou até sofrer dano.",
+  },
+] as const;
+export function requestHack(
+  s: CyberpunkState,
+  targetId: string,
+  action: "jack" | "breach" | "quickhack",
+  minute: number,
+  quickhackId?: string,
+): CyberPendingRoll {
+  const t = s.net.targets.find((t) => t.id === targetId);
+  if (s.era !== 2077) throw Error("Quickhacks de Neuroport pertencem a 2077.");
+  if (s.role !== "Netrunner") throw Error("Ação exige Interface de Netrunner.");
+  if (!s.inventory.some((i) => i.type === "cyberdeck"))
+    throw Error("É necessário um cyberdeck compatível.");
+  if (
+    !s.inventory.some(
+      (i) => i.installed && i.name === "Neuroport Cyberdeck Port",
+    )
+  )
+    throw Error("Instale um Neuroport Cyberdeck Port.");
+  if (s.net.meatAction || s.net.actionsUsed >= netActionsPerTurn(s.roleRank))
+    throw Error("Ações NET esgotadas.");
+  if (!t || !t.neuroport || t.distance > 50 || !t.visible)
+    throw Error("O alvo precisa de Neuroport, visão e distância até 50 m.");
+  if ((t.blockedUntil ?? 0) > minute)
+    throw Error("Aguarde 60 minutos após expulsão.");
+  if (action === "jack" && t.connected) throw Error("Já conectado.");
+  if (action !== "jack" && !t.connected)
+    throw Error("Conecte ao alvo primeiro.");
+  if (action === "breach" && t.breached >= t.selfIce)
+    throw Error("Nenhuma Passwall pendente.");
+  const h = QUICKHACKS.find((h) => h.id === quickhackId);
+  if (action === "quickhack") {
+    if (t.breached < t.selfIce) throw Error("Atravesse todas as Passwalls.");
+    if (t.lastHackTurn === s.net.turn)
+      throw Error("Uma tentativa de quickhack por alvo e turno.");
+    if (!h || s.roleRank < h.rank) throw Error("Quickhack indisponível.");
+    if (h.id === "lure" && t.aware)
+      throw Error("Atrair exige alvo desavisado.");
+  }
+  return {
+    id: crypto.randomUUID(),
+    label:
+      action === "jack" ? "Jack In" : action === "breach" ? "Breach" : h!.name,
+    kind: "interface",
+    modifier: s.roleRank + woundPenalty(s, minute),
+    target:
+      action === "breach"
+        ? 4 + 2 * t.selfIce
+        : action === "quickhack"
+          ? h!.dv
+          : undefined,
+    targetId,
+    netAction: action,
+    quickhackId,
+  };
 }
-export function finishHack(s:CyberpunkState,p:CyberPendingRoll,r:Pick<CyberRoll,'success'>,minute:number):CyberpunkState{if(!p.netAction)return s;return {...s,net:{...s.net,actionsUsed:s.net.actionsUsed+1,targets:s.net.targets.map(t=>{if(t.id!==p.targetId)return t;const n={...t,effects:[...t.effects]};if(p.netAction==='jack'){n.connected=true;n.aware=n.aware||r.success===false;}if(p.netAction==='breach'&&r.success)n.breached+=1;if(p.netAction==='quickhack'){n.lastHackTurn=s.net.turn;if(r.success){const h=QUICKHACKS.find(h=>h.id===p.quickhackId)!;n.aware=n.aware||h.id!=='lure';n.effects.push({name:h.name,expires:minute+1});}}return n;})}};}
-export function leaveNeuroport(s:CyberpunkState,id:string,minute:number,ejected=false){if(!s.net.targets.find(t=>t.id===id)?.connected)throw Error('Alvo desconectado.');if(!ejected&&(s.net.meatAction||s.net.actionsUsed>=netActionsPerTurn(s.roleRank)))throw Error('Ações NET esgotadas.');return {...s,net:{...s.net,actionsUsed:s.net.actionsUsed+(ejected?0:1),targets:s.net.targets.map(t=>t.id===id?{...t,connected:false,breached:0,blockedUntil:ejected?minute+60:t.blockedUntil}:t)}};}
-export const nextCyberTurn=(s:CyberpunkState):CyberpunkState=>({...s,net:{...s.net,turn:s.net.turn+1,actionsUsed:0,meatAction:false,physicalAttacks:0,physicalLimit:2}});
+export function finishHack(
+  s: CyberpunkState,
+  p: CyberPendingRoll,
+  r: Pick<CyberRoll, "success">,
+  minute: number,
+): CyberpunkState {
+  if (!p.netAction) return s;
+  return {
+    ...s,
+    net: {
+      ...s.net,
+      actionsUsed: s.net.actionsUsed + 1,
+      targets: s.net.targets.map((t) => {
+        if (t.id !== p.targetId) return t;
+        const n = { ...t, effects: [...t.effects] };
+        if (p.netAction === "jack") {
+          n.connected = true;
+          n.aware = n.aware || r.success === false;
+        }
+        if (p.netAction === "breach" && r.success) n.breached += 1;
+        if (p.netAction === "quickhack") {
+          n.lastHackTurn = s.net.turn;
+          if (r.success) {
+            const h = QUICKHACKS.find((h) => h.id === p.quickhackId)!;
+            n.aware = n.aware || h.id !== "lure";
+            n.effects.push({ name: h.name, expires: minute + 1 });
+          }
+        }
+        return n;
+      }),
+    },
+  };
+}
+export function leaveNeuroport(
+  s: CyberpunkState,
+  id: string,
+  minute: number,
+  ejected = false,
+) {
+  if (!s.net.targets.find((t) => t.id === id)?.connected)
+    throw Error("Alvo desconectado.");
+  if (
+    !ejected &&
+    (s.net.meatAction || s.net.actionsUsed >= netActionsPerTurn(s.roleRank))
+  )
+    throw Error("Ações NET esgotadas.");
+  return {
+    ...s,
+    net: {
+      ...s.net,
+      actionsUsed: s.net.actionsUsed + (ejected ? 0 : 1),
+      targets: s.net.targets.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              connected: false,
+              breached: 0,
+              blockedUntil: ejected ? minute + 60 : t.blockedUntil,
+            }
+          : t,
+      ),
+    },
+  };
+}
+export const nextCyberTurn = (s: CyberpunkState): CyberpunkState => ({
+  ...s,
+  net: {
+    ...s.net,
+    turn: s.net.turn + 1,
+    actionsUsed: 0,
+    meatAction: false,
+    physicalAttacks: 0,
+    physicalLimit: 2,
+  },
+});

@@ -23,3 +23,11 @@ OracleRPG's vertical campaign timeline is an independent implementation inspired
 - Reference code license: GNU GPLv3
 
 No Timeline Builder source code, templates, styles, images, or other assets are included in OracleRPG. The OracleRPG implementation uses its own React components, persistent game-state model, campaign calendar, filters, and GM tools.
+
+## Cyberpunk campaign reference material
+
+Cyberpunk reference records, maps, illustrations and d6/d10 dice faces were imported from the user-provided `edgerunners-mission-kit-v11FVTT.zip`. The archive metadata identifies R. Talsorian Games and Schism for the Foundry v11 Edgerunners module (v1.1.0); the exported world references Cyberpunk RED Core v0.88.2. Individual imported records retain their original book/page references where available.
+
+Cyberpunk RED, Cyberpunk Edgerunners and their associated artwork and names remain the property of their respective rights holders. Importing this material does not transfer ownership or grant a new redistribution license. These notices do not represent permission from those rights holders.
+
+The six Cyberpunk interface atlas crops come from an image generated for this OracleRPG implementation. They are distinct from the reference artwork imported from the archive.

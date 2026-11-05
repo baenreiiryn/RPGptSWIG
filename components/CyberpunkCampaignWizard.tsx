@@ -1,20 +1,385 @@
-'use client';
-import {useState} from 'react';
-import type {GameState} from '@/lib/game';
-import {roles,entriesForEra,priceOf,entryArt,type CyberEntry} from '@/lib/cyberpunk/catalog';
-import {BASIC_SKILLS,DEFAULT_STATS,STAT_KEYS,STAT_LABELS,validateBuild,skillCost,maxHitPoints} from '@/lib/cyberpunk/rules';
-import {buildCyberCampaign,skillOptions,difficultSkills,suggestedCyberSkills} from '@/lib/cyberpunk/state';
-import type {CyberpunkEra,Stats} from '@/lib/cyberpunk/types';
-const STEPS=['Identidade','Atributos','Perícias','Equipamento','História'];const options=skillOptions();
-export default function CyberpunkCampaignWizard({era,onBack,onComplete}:{era:CyberpunkEra;onBack:()=>void;onComplete:(g:GameState)=>void}){
- const [step,setStep]=useState(0),[campaignName,setCampaignName]=useState('Night City '+era),[name,setName]=useState(''),[role,setRole]=useState('Solo'),[stats,setStats]=useState<Stats>({...DEFAULT_STATS}),[skills,setSkills]=useState<Record<string,number>>(()=>Object.fromEntries(BASIC_SKILLS.map(k=>[k,2]))),[items,setItems]=useState<CyberEntry[]>([]),[query,setQuery]=useState(''),[kind,setKind]=useState('weapon'),[history,setHistory]=useState(''),[language,setLanguage]=useState('Português'),[hook,setHook]=useState(''),[tone,setTone]=useState('Neon noir'),[neuroport,setNeuroport]=useState(true),[error,setError]=useState('');
- const cost=items.reduce((n,e)=>n+priceOf(e),0),fashion=Math.min(800,items.filter(e=>e.type==='clothing'||e.data.type==='fashionWare').reduce((n,e)=>n+priceOf(e),0)),spent=skillCost(skills,difficultSkills),total=STAT_KEYS.reduce((n,k)=>n+stats[k],0),available=entriesForEra(era).filter(e=>e.type===kind&&e.name!=='Neuroport (Free)'&&e.name.toLowerCase().includes(query.toLowerCase())).slice(0,60);
- function advance(){setError('');if(step===0&&(!name.trim()||!campaignName.trim()))return setError('Informe apelido e campanha.');if(step===1&&(total!==62||STAT_KEYS.some(k=>stats[k]<2||stats[k]>8)))return setError('Distribua 62 pontos de atributos, entre 2 e 8.');if(step===2){const es=validateBuild(stats,skills,difficultSkills);if(es.length)return setError(es.join(' '));}if(step===3&&cost-fashion>2550)return setError('Orçamento geral insuficiente.');if(step<4){setStep(step+1);setQuery('');return;}try{onComplete(buildCyberCampaign({era,campaignName,name,role,stats,skills,items:items.map(e=>e.id),tone,hook,history,nativeLanguage:language,neuroport}));}catch(e){setError((e as Error).message);}}
- return <main className="cpShell cpWizard"><header className="cpSectionHeading"><div><small>ORACLERPG // {era}</small><h1>Crie seu Edgerunner.</h1></div><button onClick={onBack}>← Sistemas</button></header><nav className="cpSteps" aria-label="Etapas">{STEPS.map((s,i)=><span key={s} aria-current={step===i?'step':undefined}>{String(i+1).padStart(2,'0')} {s}</span>)}</nav>
- {step===0&&<section className="cpPanel cpForm"><h2>Identidade na cidade</h2><label>Campanha<input value={campaignName} onChange={e=>setCampaignName(e.target.value)}/></label><label>Apelido<input value={name} onChange={e=>setName(e.target.value)}/></label><label>Papel<select aria-label="Papel" value={role} onChange={e=>setRole(e.target.value)}>{roles.map(e=><option key={e.id}>{e.name}</option>)}</select></label><p>{roles.find(e=>e.name===role)?.description}</p><small>Habilidade: {roles.find(e=>e.name===role)?.data.mainRoleAbility} · Rank inicial 4</small><label>Tom<input value={tone} onChange={e=>setTone(e.target.value)}/></label>{era===2077&&<label><span><input type="checkbox" checked={neuroport} onChange={e=>setNeuroport(e.target.checked)}/> Neuroport instalado na infância, sem custo ou perda de Humanidade inicial (CEMK).</span></label>}</section>}
- {step===1&&<section className="cpPanel"><h2>Atributos <em>{total}/62</em></h2><p>Pacote Completo: 2–8 por atributo.</p><div className="cpStatsGrid">{STAT_KEYS.map(k=><label key={k}><b>{k.toUpperCase()}</b><small>{STAT_LABELS[k]}</small><input aria-label={STAT_LABELS[k]} type="number" min={2} max={8} value={stats[k]} onChange={e=>setStats({...stats,[k]:Number(e.target.value)})}/></label>)}</div><p>PV: {maxHitPoints(stats)} · Humanidade: {stats.emp*10}</p></section>}
- {step===2&&<section className="cpPanel"><h2>Perícias <em>{spent}/86</em></h2><p>Máximo 6. Básicas (★) exigem 2. Perícias x2 custam o dobro.</p><button onClick={()=>setSkills(suggestedCyberSkills(role))}>Preencher sugestão para {role}</button><label>Idioma nativo gratuito (nível 4)<input value={language} onChange={e=>setLanguage(e.target.value)}/></label><input placeholder="Filtrar perícias" value={query} onChange={e=>setQuery(e.target.value)}/><div className="cpSkillList">{options.filter(e=>e.name.toLowerCase().includes(query.toLowerCase())).map(e=><label key={e.name}><span>{BASIC_SKILLS.includes(e.name)?'★ ':''}{e.name} {difficultSkills.has(e.name)?'(x2)':''}<small>{e.data.stat?.toUpperCase()}</small></span><input aria-label={e.name} type="number" min={BASIC_SKILLS.includes(e.name)?2:0} max={6} value={skills[e.name]??0} onChange={v=>setSkills({...skills,[e.name]:Number(v.target.value)})}/></label>)}</div></section>}
- {step===3&&<section className="cpPanel"><h2>Equipamento <em>{2550+fashion-cost} €$</em></h2><p>2550 €$ gerais + 800 €$ exclusivos para vestuário/Fashionware. Crédito de moda não usado é perdido. Instale cyberware adicional pela ficha, com base, slots e Humanidade.</p><div className="cpFilters"><select aria-label="Categoria de equipamento" value={kind} onChange={e=>{setKind(e.target.value);setQuery('');}}>{['weapon','armor','cyberware','cyberdeck','gear','ammo','program','clothing'].map(k=><option key={k} value={k}>{k}</option>)}</select><input placeholder="Buscar equipamento" value={query} onChange={e=>setQuery(e.target.value)}/></div><div className="cpLoadout">{items.map((e,i)=><button key={i} onClick={()=>setItems(items.filter((_,j)=>j!==i))}>{e.name} · {priceOf(e)} €$ ×</button>)}</div><div className="cpCatalogGrid">{available.map(e=><button className="cpItemCard" key={e.id} disabled={cost+priceOf(e)-Math.min(800,fashion+((e.type==='clothing'||e.data.type==='fashionWare')?priceOf(e):0))>2550} onClick={()=>setItems([...items,e])}>{entryArt(e)&&<img src={entryArt(e)} alt=""/>}<b>{e.name}</b><span>{priceOf(e)} €$</span></button>)}</div></section>}
- {step===4&&<section className="cpPanel cpForm"><h2>Seu passado cobra um preço.</h2><label>História e Lifepath<textarea rows={6} value={history} onChange={e=>setHistory(e.target.value)} placeholder="Origem, família, estilo, amigos, inimigos e objetivos…"/></label><label>Gancho da campanha<textarea rows={3} value={hook} onChange={e=>setHook(e.target.value)}/></label><p>{name} · {role} 4 · {era} · {maxHitPoints(stats)} PV · {2550+fashion-cost} €$</p></section>}
- {error&&<p className="cpError" role="alert">{error}</p>}<footer className="cpWizardFooter"><button disabled={step===0} onClick={()=>{setStep(step-1);setQuery('');}}>← Anterior</button><button className="cpPrimary" onClick={advance}>{step===4?'INICIAR CAMPANHA':'Continuar →'}</button></footer></main>;
+"use client";
+import { useState } from "react";
+import type { GameState } from "@/lib/game";
+import {
+  roles,
+  entriesForEra,
+  priceOf,
+  entryArt,
+  type CyberEntry,
+} from "@/lib/cyberpunk/catalog";
+import {
+  BASIC_SKILLS,
+  DEFAULT_STATS,
+  STAT_KEYS,
+  STAT_LABELS,
+  validateBuild,
+  skillCost,
+  maxHitPoints,
+} from "@/lib/cyberpunk/rules";
+import {
+  buildCyberCampaign,
+  skillOptions,
+  difficultSkills,
+  suggestedCyberSkills,
+} from "@/lib/cyberpunk/state";
+import type { CyberpunkEra, Stats } from "@/lib/cyberpunk/types";
+const STEPS = [
+  "Identidade",
+  "Atributos",
+  "Perícias",
+  "Equipamento",
+  "História",
+];
+const options = skillOptions();
+export default function CyberpunkCampaignWizard({
+  era,
+  onBack,
+  onComplete,
+}: {
+  era: CyberpunkEra;
+  onBack: () => void;
+  onComplete: (g: GameState) => void;
+}) {
+  const [step, setStep] = useState(0),
+    [campaignName, setCampaignName] = useState("Night City " + era),
+    [name, setName] = useState(""),
+    [role, setRole] = useState("Solo"),
+    [stats, setStats] = useState<Stats>({ ...DEFAULT_STATS }),
+    [skills, setSkills] = useState<Record<string, number>>(() =>
+      Object.fromEntries(BASIC_SKILLS.map((k) => [k, 2])),
+    ),
+    [items, setItems] = useState<CyberEntry[]>([]),
+    [query, setQuery] = useState(""),
+    [kind, setKind] = useState("weapon"),
+    [history, setHistory] = useState(""),
+    [language, setLanguage] = useState("Português"),
+    [hook, setHook] = useState(""),
+    [tone, setTone] = useState("Neon noir"),
+    [neuroport, setNeuroport] = useState(true),
+    [error, setError] = useState("");
+  const cost = items.reduce((n, e) => n + priceOf(e), 0),
+    fashion = Math.min(
+      800,
+      items
+        .filter((e) => e.type === "clothing" || e.data.type === "fashionWare")
+        .reduce((n, e) => n + priceOf(e), 0),
+    ),
+    spent = skillCost(skills, difficultSkills),
+    total = STAT_KEYS.reduce((n, k) => n + stats[k], 0),
+    available = entriesForEra(era)
+      .filter(
+        (e) =>
+          e.type === kind &&
+          e.name !== "Neuroport (Free)" &&
+          e.name.toLowerCase().includes(query.toLowerCase()),
+      )
+      .slice(0, 60);
+  function advance() {
+    setError("");
+    if (step === 0 && (!name.trim() || !campaignName.trim()))
+      return setError("Informe apelido e campanha.");
+    if (
+      step === 1 &&
+      (total !== 62 || STAT_KEYS.some((k) => stats[k] < 2 || stats[k] > 8))
+    )
+      return setError("Distribua 62 pontos de atributos, entre 2 e 8.");
+    if (step === 2) {
+      const es = validateBuild(stats, skills, difficultSkills);
+      if (es.length) return setError(es.join(" "));
+    }
+    if (step === 3 && cost - fashion > 2550)
+      return setError("Orçamento geral insuficiente.");
+    if (step < 4) {
+      setStep(step + 1);
+      setQuery("");
+      return;
+    }
+    try {
+      onComplete(
+        buildCyberCampaign({
+          era,
+          campaignName,
+          name,
+          role,
+          stats,
+          skills,
+          items: items.map((e) => e.id),
+          tone,
+          hook,
+          history,
+          nativeLanguage: language,
+          neuroport,
+        }),
+      );
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  return (
+    <main className="cpShell cpWizard">
+      <header className="cpSectionHeading">
+        <div>
+          <small>ORACLERPG // {era}</small>
+          <h1>Crie seu Edgerunner.</h1>
+        </div>
+        <button onClick={onBack}>← Sistemas</button>
+      </header>
+      <nav className="cpSteps" aria-label="Etapas">
+        {STEPS.map((s, i) => (
+          <span key={s} aria-current={step === i ? "step" : undefined}>
+            {String(i + 1).padStart(2, "0")} {s}
+          </span>
+        ))}
+      </nav>
+      {step === 0 && (
+        <section className="cpPanel cpForm">
+          <h2>Identidade na cidade</h2>
+          <label>
+            Campanha
+            <input
+              value={campaignName}
+              onChange={(e) => setCampaignName(e.target.value)}
+            />
+          </label>
+          <label>
+            Apelido
+            <input value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
+          <label>
+            Papel
+            <select
+              aria-label="Papel"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              {roles.map((e) => (
+                <option key={e.id}>{e.name}</option>
+              ))}
+            </select>
+          </label>
+          <p>{roles.find((e) => e.name === role)?.description}</p>
+          <small>
+            Habilidade:{" "}
+            {roles.find((e) => e.name === role)?.data.mainRoleAbility} · Rank
+            inicial 4
+          </small>
+          <label>
+            Tom
+            <input value={tone} onChange={(e) => setTone(e.target.value)} />
+          </label>
+          {era === 2077 && (
+            <label>
+              <span>
+                <input
+                  type="checkbox"
+                  checked={neuroport}
+                  onChange={(e) => setNeuroport(e.target.checked)}
+                />{" "}
+                Neuroport instalado na infância, sem custo ou perda de
+                Humanidade inicial (CEMK).
+              </span>
+            </label>
+          )}
+        </section>
+      )}
+      {step === 1 && (
+        <section className="cpPanel">
+          <h2>
+            Atributos <em>{total}/62</em>
+          </h2>
+          <p>Pacote Completo: 2–8 por atributo.</p>
+          <div className="cpStatsGrid">
+            {STAT_KEYS.map((k) => (
+              <label key={k}>
+                <b>{k.toUpperCase()}</b>
+                <small>{STAT_LABELS[k]}</small>
+                <input
+                  aria-label={STAT_LABELS[k]}
+                  type="number"
+                  min={2}
+                  max={8}
+                  value={stats[k]}
+                  onChange={(e) =>
+                    setStats({ ...stats, [k]: Number(e.target.value) })
+                  }
+                />
+              </label>
+            ))}
+          </div>
+          <p>
+            PV: {maxHitPoints(stats)} · Humanidade: {stats.emp * 10}
+          </p>
+        </section>
+      )}
+      {step === 2 && (
+        <section className="cpPanel">
+          <h2>
+            Perícias <em>{spent}/86</em>
+          </h2>
+          <p>Máximo 6. Básicas (★) exigem 2. Perícias x2 custam o dobro.</p>
+          <button onClick={() => setSkills(suggestedCyberSkills(role))}>
+            Preencher sugestão para {role}
+          </button>
+          <label>
+            Idioma nativo gratuito (nível 4)
+            <input
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            />
+          </label>
+          <input
+            placeholder="Filtrar perícias"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <div className="cpSkillList">
+            {options
+              .filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
+              .map((e) => (
+                <label key={e.name}>
+                  <span>
+                    {BASIC_SKILLS.includes(e.name) ? "★ " : ""}
+                    {e.name} {difficultSkills.has(e.name) ? "(x2)" : ""}
+                    <small>{e.data.stat?.toUpperCase()}</small>
+                  </span>
+                  <input
+                    aria-label={e.name}
+                    type="number"
+                    min={BASIC_SKILLS.includes(e.name) ? 2 : 0}
+                    max={6}
+                    value={skills[e.name] ?? 0}
+                    onChange={(v) =>
+                      setSkills({ ...skills, [e.name]: Number(v.target.value) })
+                    }
+                  />
+                </label>
+              ))}
+          </div>
+        </section>
+      )}
+      {step === 3 && (
+        <section className="cpPanel">
+          <h2>
+            Equipamento <em>{2550 + fashion - cost} €$</em>
+          </h2>
+          <p>
+            2550 €$ gerais + 800 €$ exclusivos para vestuário/Fashionware.
+            Crédito de moda não usado é perdido. Instale cyberware adicional
+            pela ficha, com base, slots e Humanidade.
+          </p>
+          <div className="cpFilters">
+            <select
+              aria-label="Categoria de equipamento"
+              value={kind}
+              onChange={(e) => {
+                setKind(e.target.value);
+                setQuery("");
+              }}
+            >
+              {[
+                "weapon",
+                "armor",
+                "cyberware",
+                "cyberdeck",
+                "gear",
+                "ammo",
+                "program",
+                "clothing",
+              ].map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Buscar equipamento"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="cpLoadout">
+            {items.map((e, i) => (
+              <button
+                key={i}
+                onClick={() => setItems(items.filter((_, j) => j !== i))}
+              >
+                {e.name} · {priceOf(e)} €$ ×
+              </button>
+            ))}
+          </div>
+          <div className="cpCatalogGrid">
+            {available.map((e) => (
+              <button
+                className="cpItemCard"
+                key={e.id}
+                disabled={
+                  cost +
+                    priceOf(e) -
+                    Math.min(
+                      800,
+                      fashion +
+                        (e.type === "clothing" || e.data.type === "fashionWare"
+                          ? priceOf(e)
+                          : 0),
+                    ) >
+                  2550
+                }
+                onClick={() => setItems([...items, e])}
+              >
+                {entryArt(e) && <img src={entryArt(e)} alt="" />}
+                <b>{e.name}</b>
+                <span>{priceOf(e)} €$</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+      {step === 4 && (
+        <section className="cpPanel cpForm">
+          <h2>Seu passado cobra um preço.</h2>
+          <label>
+            História e Lifepath
+            <textarea
+              rows={6}
+              value={history}
+              onChange={(e) => setHistory(e.target.value)}
+              placeholder="Origem, família, estilo, amigos, inimigos e objetivos…"
+            />
+          </label>
+          <label>
+            Gancho da campanha
+            <textarea
+              rows={3}
+              value={hook}
+              onChange={(e) => setHook(e.target.value)}
+            />
+          </label>
+          <p>
+            {name} · {role} 4 · {era} · {maxHitPoints(stats)} PV ·{" "}
+            {2550 + fashion - cost} €$
+          </p>
+        </section>
+      )}
+      {error && (
+        <p className="cpError" role="alert">
+          {error}
+        </p>
+      )}
+      <footer className="cpWizardFooter">
+        <button
+          disabled={step === 0}
+          onClick={() => {
+            setStep(step - 1);
+            setQuery("");
+          }}
+        >
+          ← Anterior
+        </button>
+        <button className="cpPrimary" onClick={advance}>
+          {step === 4 ? "INICIAR CAMPANHA" : "Continuar →"}
+        </button>
+      </footer>
+    </main>
+  );
 }
