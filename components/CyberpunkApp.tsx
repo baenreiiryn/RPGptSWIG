@@ -19,7 +19,8 @@ import CyberpunkCharacter from "./CyberpunkCharacter";
 import CyberpunkNetPanel from "./CyberpunkNetPanel";
 import CyberpunkCompendium from "./CyberpunkCompendium";
 import NightCityMemory from "./NightCityMemory";
-type View = "session" | "character" | "net" | "world" | "memory" | "compendium";
+import CyberpunkCalendar from "./CyberpunkCalendar";
+type View = "session" | "character" | "net" | "world" | "memory" | "compendium" | "calendar";
 function append(g: GameState, role: Message["role"], text: string): GameState {
   return {
     ...g,
@@ -230,10 +231,13 @@ export default function CyberpunkApp({
         <div className="cpCampaignTitle">
           <b>{state.campaign.name}</b>
           <small>
-            {place?.name} · {cyberDate(cp.era, state.time.campaignMinute)}
+            {place?.name} · {cp.calendarInitialized === false ? `${cp.era} · Data a definir pelo Mestre` : cyberDate(cp.era, state.time.campaignMinute, state.time.calendar)}
           </small>
         </div>
         <div className="cpButtonRow">
+          <button title="Abrir calendário e clima" aria-label="Abrir calendário e clima" onClick={() => setView("calendar")}>
+            ◷ <span className="cpHideMobile">{state.time.weather.label}{state.time.weather.temperatureC !== undefined ? ` · ${state.time.weather.temperatureC} °C` : ""}</span>
+          </button>
           <button title={`Nuvem: ${cloudLabel}`} onClick={onSettings}>
             ☁ <span className="cpHideMobile">{cloudLabel}</span>
           </button>
@@ -254,6 +258,7 @@ export default function CyberpunkApp({
             ["net", "NET"],
             ["world", "Mundo"],
             ["memory", "Memória / Mapa"],
+            ["calendar", "Calendário"],
             ["compendium", "Compêndio"],
           ] as [View, string][]
         ).map(([id, label]) => (
@@ -292,7 +297,7 @@ export default function CyberpunkApp({
                         : "SISTEMA"}
                   </small>
                   <p>{m.text}</p>
-                  <time>{cyberDate(cp.era, m.campaignMinute ?? 0)}</time>
+                  <time>{cp.calendarInitialized === false ? `${cp.era} · Data a definir` : cyberDate(cp.era, m.campaignMinute ?? 0, state.time.calendar)}</time>
                 </article>
               ))}
               {busy && <p className="cpThinking">Sinal em transmissão…</p>}
@@ -512,6 +517,7 @@ export default function CyberpunkApp({
           </aside>
         </section>
       )}
+      {view === "calendar" && <CyberpunkCalendar game={state} onSession={() => setView("session")} />}
       <fieldset
         className="cpViewContent"
         disabled={busy || !!cp.pending || !!cp.recovery}

@@ -16,10 +16,42 @@ import {
 } from "./state";
 import { findCyberEntry, entriesForEra } from "./catalog";
 import { requestHack, QUICKHACKS, nextCyberTurn } from "./hacking";
+import { applyCyberCalendarTool, CYBER_WEATHER } from "./calendar";
 const str = { type: "string" },
   num = { type: "number" },
   bool = { type: "boolean" };
+const dateFields = {
+  month: { type: "integer", minimum: 1, maximum: 12 },
+  day: { type: "integer", minimum: 1, maximum: 31 },
+  hour: { type: "integer", minimum: 0, maximum: 23 },
+  minute: { type: "integer", minimum: 0, maximum: 59 },
+};
+const weatherFields = {
+  condition: { type: "string", enum: Object.keys(CYBER_WEATHER) },
+  label: str,
+  description: str,
+  temperatureC: num,
+  intensity: { type: "string", enum: ["light", "moderate", "heavy"] },
+};
 const specs = [
+  [
+    "calendar_start",
+    "Antes da primeira cena, escolha o dia, mês, horário e clima da abertura. O ano é fixo pela campanha. Só pode ser usado uma vez.",
+    { ...dateFields, ...weatherFields },
+    ["month", "day", "hour", "minute", "condition", "label"],
+  ],
+  [
+    "weather_set",
+    "Atualize o clima atual de Night City conforme a ficção. Informe descrição e temperatura quando relevantes.",
+    weatherFields,
+    ["condition", "label"],
+  ],
+  [
+    "calendar_event_add",
+    "Agende compromisso ou prazo no calendário sem avançar o tempo. Mês de 1 a 12. Ano omitido usa o ano atual.",
+    { ...dateFields, year: { type: "integer" }, title: str, description: str },
+    ["month", "day", "hour", "minute", "title"],
+  ],
   [
     "search_compendium",
     "Consulte regras e mecânicas da época.",
@@ -206,6 +238,18 @@ export function executeCyberTool(
   const s = g.cyberpunk!;
   let cp = s,
     next = g;
+  if (["calendar_start", "weather_set", "calendar_event_add"].includes(name)) {
+    next = applyCyberCalendarTool(g, name, a);
+    return {
+      state: next,
+      result: {
+        ok: true,
+        date: cyberDate(s.era, next.time.campaignMinute, next.time.calendar),
+        weather: next.time.weather,
+        events: next.time.events,
+      },
+    };
+  }
   if (name === "search_compendium")
     return {
       state: g,
@@ -530,7 +574,10 @@ export function cyberInstructions(g: GameState) {
       : "2045: acesso local, Interface, programas, Black ICE e arquiteturas NET. A exploração de andares não é simulada automaticamente; consulte o compêndio, peça testes e registre consequências.",
     "Mantenha segredos fora da resposta e da memória pública. Preserve IDs ao atualizar NPCs e missões. Não repita recompensa, dano, consumo ou evento já aplicado na retomada.",
     "Ao obter o resultado solicitado, resolva e continue sem exigir outra mensagem. Se solicitar dados, registre request_roll antes do texto. Não solicite nova rolagem para substituir um resultado confirmado.",
-    `Data: ${cyberDate(s.era, g.time.campaignMinute)}. Quickhacks: ${JSON.stringify(s.era === 2077 ? QUICKHACKS : [])}`,
+    s.calendarInitialized === false
+      ? `A abertura ainda não tem data nem clima. Antes de narrar ou agir, use calendar_start e escolha o dia, mês, horário e clima adequados ao gancho; o ano inicial obrigatório é ${s.era}. Não peça ao jogador para escolher. Depois informe a data e o clima na cena.`
+      : `Data: ${cyberDate(s.era, g.time.campaignMinute, g.time.calendar)}. Clima atual: ${JSON.stringify(g.time.weather)}. Use weather_set sempre que o clima mudar na ficção, advance_time para deslocamentos, espera, sono e passagem de dias; nunca reinicie a data. Use calendar_event_add para compromissos e prazos reais e lembre o jogador quando chegarem. Agenda: ${JSON.stringify(g.time.events)}.`,
+    `Quickhacks: ${JSON.stringify(s.era === 2077 ? QUICKHACKS : [])}`,
   ].join("\n");
 }
 export type CyberRespond = (p: {
@@ -538,6 +585,7 @@ export type CyberRespond = (p: {
   instructions: string;
   input: unknown[];
   tools?: unknown[];
+  toolChoice?: { type: "function"; name: string };
 }) => Promise<{ output?: unknown[]; output_text?: unknown }>;
 function signature(name: string, args: string) {
   try {
@@ -571,7 +619,12 @@ export async function runCyberTurn(
             content:
               JSON.stringify({
                 campaign: g.campaign,
-                date: cyberDate(cp.era, g.time.campaignMinute),
+                date:
+                  cp.calendarInitialized === false
+                    ? `Data a definir pelo Mestre em ${cp.era}`
+                    : cyberDate(cp.era, g.time.campaignMinute, g.time.calendar),
+                weather: g.time.weather,
+                calendar: g.time.events,
                 name: g.character.name,
                 appearance: g.character.appearance,
                 cyberpunk: { ...cp, recovery: undefined },
@@ -600,7 +653,13 @@ export async function runCyberTurn(
       model,
       instructions: cyberInstructions(g),
       input: recovery.input,
-      tools: cyberTools,
+      tools:
+        g.cyberpunk!.calendarInitialized === false
+          ? cyberTools.filter((t) => t.name === "calendar_start")
+          : cyberTools.filter((t) => t.name !== "calendar_start"),
+      ...(g.cyberpunk!.calendarInitialized === false
+        ? { toolChoice: { type: "function" as const, name: "calendar_start" } }
+        : {}),
     });
     if (!isCurrent()) throw Error("Campanha alterada.");
     const output = (res.output ?? []) as Record<string, unknown>[],
@@ -634,6 +693,14 @@ export async function runCyberTurn(
           result = prior[i].result;
         } else if (g.cyberpunk!.pending)
           result = { ok: false, error: "Aguarde a rolagem pendente." };
+        else if (
+          g.cyberpunk!.calendarInitialized === false &&
+          name !== "calendar_start"
+        )
+          result = {
+            ok: false,
+            error: "Defina primeiro a data e o clima com calendar_start.",
+          };
         else {
           const out = executeCyberTool(g, name, JSON.parse(args));
           g = out.state;
@@ -658,6 +725,14 @@ export async function runCyberTurn(
       };
     }
     if (!calls.length && narration) {
+      if (g.cyberpunk!.calendarInitialized === false) {
+        recovery.input.push({
+          role: "developer",
+          content:
+            "A cena precisa de data e clima persistidos. Use calendar_start antes de narrar.",
+        });
+        continue;
+      }
       if (/(?:\brole\b|faça (?:um teste|uma rolagem))/i.test(narration)) {
         recovery.input.push({
           role: "developer",

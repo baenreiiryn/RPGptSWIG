@@ -1305,3 +1305,159 @@
   padding: 8px 4px;
   overscroll-behavior: contain;
 }
+.cpCalendar {
+  padding: 22px 0;
+}
+.cpCalendarStatus {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  border-top: 2px solid var(--cp-cyan);
+}
+.cpCalendarStatus h2 {
+  font-size: clamp(18px, 2vw, 27px);
+}
+.cpCalendarStatus p {
+  margin-bottom: 0;
+}
+.cpWeather {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 380px;
+  border-left: 1px solid #294451;
+  padding-left: 24px;
+}
+.cpWeather strong {
+  color: var(--cp-yellow);
+  font-size: 21px;
+}
+.cpWeather p {
+  margin: 0;
+}
+.cpCalendarLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+.cpCalendarToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.cpCalendarToolbar h2 {
+  flex: 1;
+  text-align: center;
+  text-transform: capitalize;
+  font-size: 21px;
+}
+.cpCalendarToolbar .cpCalendarToday {
+  flex-basis: 100%;
+  padding: 8px;
+}
+.cpMonthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.cpWeekday {
+  text-align: center;
+  padding-bottom: 8px;
+}
+.cpShell .cpCalendarDay {
+  min-height: 76px;
+  min-width: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-align: left;
+}
+.cpCalendarDay > span {
+  font-size: 18px;
+}
+.cpCalendarDay small {
+  color: var(--cp-red);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+.cpShell .cpCalendarCurrent {
+  box-shadow: inset 0 3px var(--cp-yellow);
+}
+.cpCalendarLegend {
+  font-size: 12px;
+}
+.cpCalendarLegend > span {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  background: var(--cp-yellow);
+}
+.cpCalendarAgenda h2 {
+  font-size: 20px;
+  text-transform: capitalize;
+}
+.cpCalendarEvent {
+  border-left: 2px solid var(--cp-red);
+  padding: 16px;
+  background: #090f17;
+  margin-top: 18px;
+  overflow-wrap: anywhere;
+}
+.cpCalendarEvent.completed {
+  opacity: 0.65;
+  border-color: #59727d;
+}
+.cpCalendarEvent h3 {
+  font-size: 18px;
+}
+.cpCalendarEvent p {
+  white-space: pre-wrap;
+}
+.cpCalendarHint {
+  border-top: 1px solid #294451;
+  padding-top: 16px;
+  font-size: 12px;
+  margin-top: 24px;
+}
+.cpCalendarPending {
+  margin-top: 24px;
+}
+@media (max-width: 900px) {
+  .cpCalendarLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cpCalendarStatus {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .cpWeather {
+    max-width: none;
+    border-left: 0;
+    border-top: 1px solid #294451;
+    padding: 16px 0 0;
+  }
+}
+@media (max-width: 520px) {
+  .cpMonthGrid {
+    gap: 3px;
+  }
+  .cpShell .cpCalendarDay {
+    min-height: 58px;
+    padding: 6px;
+  }
+  .cpCalendarDay > span {
+    font-size: 16px;
+  }
+  .cpCalendarToolbar h2 {
+    font-size: 18px;
+  }
+  .cpCalendarStatus {
+    padding: 16px;
+  }
+}

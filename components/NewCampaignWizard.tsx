@@ -48,6 +48,7 @@ export type NewCampaignAiAdapter = {
     instructions: string;
     input: unknown[];
     tools?: unknown[];
+    toolChoice?: { type: "function"; name: string };
   }) => Promise<AiResponse>;
   onConnect: () => void | Promise<void>;
 };

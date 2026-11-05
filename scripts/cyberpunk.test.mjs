@@ -35,7 +35,7 @@ const sequence = (...v) => {
   return () => v[i++];
 };
 function campaign(era = 2077) {
-  return state.buildCyberCampaign({
+  const g = state.buildCyberCampaign({
     era,
     campaignName: "Night City Test",
     name: "Merc",
@@ -49,6 +49,9 @@ function campaign(era = 2077) {
     items: [],
     neuroport: true,
   });
+  // These mechanics tests operate after the GM has initialized the campaign.
+  g.cyberpunk.calendarInitialized = true;
+  return g;
 }
 function netState() {
   const s = campaign().cyberpunk;

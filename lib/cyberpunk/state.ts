@@ -356,11 +356,13 @@ export function buildCyberCampaign(d: CyberCreation): GameState {
       : undefined;
   cp.places = defaultPlaces(d.era);
   cp.locationId = cp.places[0].id;
+  cp.calendarInitialized = false;
   const createdAt = new Date().toISOString(),
     calendar = {
       id: "gregorian-" + d.era,
       name: "Night City",
       epochYear: d.era,
+      gregorianEpoch: new Date(Date.UTC(d.era, 0, 1, 20)).toISOString(),
       months: [
         "Janeiro",
         "Fevereiro",
@@ -406,8 +408,8 @@ export function buildCyberCampaign(d: CyberCreation): GameState {
       calendar,
       campaignMinute: 0,
       weather: {
-        condition: "rain",
-        label: "Chuva",
+        condition: "custom",
+        label: "Clima a definir",
         updatedAtCampaignMinute: 0,
       },
       events: [],

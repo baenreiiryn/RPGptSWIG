@@ -24,6 +24,8 @@ export type CampaignCalendarDefinition = {
   id: string;
   name: string;
   epochYear: number;
+  /** Civil UTC date represented by campaign minute zero (Gregorian calendars only). */
+  gregorianEpoch?: string;
   weekdays: CalendarWeekday[];
   months: CalendarMonth[];
   moons: CalendarMoon[];
@@ -296,8 +298,28 @@ export function createCampaignTimeState(options: {
   };
 }
 
+export function gregorianEpochMs(calendar: CampaignCalendarDefinition): number | undefined {
+  // Older Night City saves used this same origin without storing it explicitly.
+  if (!calendar.gregorianEpoch && !/^gregorian-(2045|2077)$/.test(calendar.id)) return undefined;
+  const epoch = calendar.gregorianEpoch ? Date.parse(calendar.gregorianEpoch) : Date.UTC(calendar.epochYear, 0, 1, 20);
+  if (!Number.isFinite(epoch) || calendar.months.length !== 12 || calendar.weekdays.length !== 7)
+    throw new Error("Calendário gregoriano inválido.");
+  return epoch;
+}
+
 export function campaignMinuteFromDate(calendar: CampaignCalendarDefinition, input: CampaignDateInput) {
   assertCalendar(calendar);
+  const epoch = gregorianEpochMs(calendar);
+  if (epoch !== undefined) {
+    const { year, monthIndex, day, hour = 0, minute = 0 } = input;
+    if (![year, monthIndex, day, hour, minute].every(Number.isInteger) || year < calendar.epochYear || year > 9999 || monthIndex < 0 || monthIndex > 11 || day < 1 || hour < 0 || hour > 23 || minute < 0 || minute > 59)
+      throw new Error("Data ou horário inválido.");
+    const value = Date.UTC(year, monthIndex, day, hour, minute);
+    const date = new Date(value);
+    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== monthIndex || date.getUTCDate() !== day)
+      throw new Error("Dia inválido para este mês.");
+    return (value - epoch) / 60000;
+  }
   if (!Number.isInteger(input.year) || input.year < calendar.epochYear) throw new Error(`Year must be ${calendar.epochYear} or later.`);
   const month = calendar.months[input.monthIndex];
   if (!month) throw new Error("Month index is outside this calendar.");
@@ -318,6 +340,29 @@ export function deriveCampaignDateTime(source: CalendarOrTime, campaignMinute?: 
   const calendar = calendarOf(source);
   assertCalendar(calendar);
   const minuteValue = minuteOf(source, campaignMinute);
+  const epoch = gregorianEpochMs(calendar);
+  if (epoch !== undefined) {
+    const date = new Date(epoch + minuteValue * 60000);
+    const year = date.getUTCFullYear();
+    const monthIndex = date.getUTCMonth();
+    const day = date.getUTCDate();
+    const hour = date.getUTCHours();
+    const minute = date.getUTCMinutes();
+    const weekdayIndex = date.getUTCDay();
+    return {
+      year,
+      monthIndex,
+      month: { ...calendar.months[monthIndex], days: new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate() },
+      day,
+      dayOfYear: Math.floor((Date.UTC(year, monthIndex, day) - Date.UTC(year, 0, 1)) / 86400000) + 1,
+      absoluteDay: Math.floor(date.getTime() / 86400000) - Math.floor(epoch / 86400000),
+      weekdayIndex,
+      weekday: calendar.weekdays[weekdayIndex],
+      hour,
+      minute,
+      period: hour >= 5 && hour < 7 ? "dawn" : hour >= 7 && hour < 18 ? "day" : hour >= 18 && hour < 20 ? "dusk" : "night",
+    };
+  }
   const absoluteDay = Math.floor(minuteValue / MINUTES_PER_DAY);
   const minuteOfDay = minuteValue % MINUTES_PER_DAY;
   const daysInYear = yearLengthDays(calendar);

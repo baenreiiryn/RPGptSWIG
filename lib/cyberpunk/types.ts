@@ -96,6 +96,7 @@ export type CyberPendingRoll = {
 export type CyberpunkState = {
   version: 1;
   era: CyberpunkEra;
+  calendarInitialized?: boolean;
   stats: Stats;
   skills: Record<string, number>;
   nativeLanguage: string;

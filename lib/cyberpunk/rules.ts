@@ -6,6 +6,10 @@ import type {
   CyberRoll,
   CyberPendingRoll,
 } from "./types";
+import {
+  gregorianEpochMs,
+  type CampaignCalendarDefinition,
+} from "../campaignTime";
 export const STAT_KEYS = [
   "int",
   "ref",
@@ -266,9 +270,17 @@ export function validateBuild(
     e.push("As 13 perícias básicas exigem pelo menos 2 níveis.");
   return e;
 }
-export function cyberDate(era: CyberpunkEra, minute: number) {
-  return new Date(Date.UTC(era, 0, 1, 20) + minute * 60000).toLocaleString(
-    "pt-BR",
-    { timeZone: "UTC", dateStyle: "short", timeStyle: "short" },
-  );
+export function cyberDate(
+  era: CyberpunkEra,
+  minute: number,
+  calendar?: CampaignCalendarDefinition,
+) {
+  const epoch =
+    (calendar ? gregorianEpochMs(calendar) : undefined) ??
+    Date.UTC(era, 0, 1, 20);
+  return new Date(epoch + minute * 60000).toLocaleString("pt-BR", {
+    timeZone: "UTC",
+    dateStyle: "short",
+    timeStyle: "short",
+  });
 }

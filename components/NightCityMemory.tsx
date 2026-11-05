@@ -4,6 +4,7 @@ import NightCityMap, { type CityMapLayer } from "./NightCityMap";
 import { mergeNightCityPlaces, PLACE_CATEGORIES } from "@/lib/cyberpunk/places";
 import type { GameState } from "@/lib/game";
 import { cyberDate } from "@/lib/cyberpunk/rules";
+import { cyberDayKey } from "@/lib/cyberpunk/calendar";
 import { withCyberState } from "@/lib/cyberpunk/state";
 export default function NightCityMemory({
   game,
@@ -65,9 +66,7 @@ export default function NightCityMemory({
               .toLowerCase()
               .includes(search.toLowerCase())) &&
           (!date ||
-            new Date(Date.UTC(cp.era, 0, 1, 20) + e.campaignMinute * 60000)
-              .toISOString()
-              .slice(0, 10) === date),
+            cyberDayKey(game, e.campaignMinute) === date),
       )
       .sort((a, b) => b.campaignMinute - a.campaignMinute);
   function addPlace() {
@@ -300,7 +299,7 @@ export default function NightCityMemory({
               </div>
               {events.map((e) => (
                 <article className="cpEvent" key={e.id}>
-                  <time>{cyberDate(cp.era, e.campaignMinute)}</time>
+                  <time>{cyberDate(cp.era, e.campaignMinute, game.time.calendar)}</time>
                   <h3>{e.title}</h3>
                   <p>{e.text}</p>
                   {e.npcIds.map((id) => (
